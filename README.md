@@ -1,9 +1,5 @@
 # Profile Config
 
-[![Tests](https://github.com/bassmanitram/profile-config/workflows/Tests/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/test.yml)
-[![Code Quality](https://github.com/bassmanitram/profile-config/workflows/Code%20Quality/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml)
-[![Documentation](https://github.com/bassmanitram/profile-config/workflows/Documentation/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/docs.yml)
-[![codecov](https://codecov.io/gh/bassmanitram/profile-config/branch/main/graph/badge.svg)](https://codecov.io/gh/bassmanitram/profile-config)
 [![PyPI version](https://badge.fury.io/py/profile-config.svg)](https://badge.fury.io/py/profile-config)
 
 Hierarchical profile-based configuration management for Python applications.
