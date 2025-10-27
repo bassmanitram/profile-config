@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "profile-config"
+version = "1.0.0"
+description = "A Python library for managing hierarchical configuration files with profile-based inheritance and variable interpolation"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Profile Config Contributors", email = "martin.j.bartlett@gmail.com"}
+]
+keywords = ["config", "configuration", "profiles", "yaml", "json", "toml", "inheritance", "interpolation"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Configuration",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "omegaconf>=2.3.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+toml = [
+    "tomli>=2.0.0; python_version < '3.11'",
+]
+test = [
+    "pytest>=6.0",
+    "pytest-cov>=3.0.0",
+]
+dev = [
+    "black>=22.0.0",
+    "isort>=5.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.991",
+    "build>=0.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/bassmanitram/profile-config"
+Documentation = "https://bassmanitram.github.io/profile-config/"
+Repository = "https://github.com/bassmanitram/profile-config.git"
+"Bug Tracker" = "https://github.com/bassmanitram/profile-config/issues"
+
+[tool.setuptools.packages.find]
+include = ["profile_config*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
