@@ -25,8 +25,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Configuration",
     "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
 ]
 dependencies = [
     "omegaconf>=2.3.0",
