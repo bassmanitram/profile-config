@@ -21,12 +21,13 @@ class ConfigDiscovery:
     1. Current working directory and parent directories (up to root)
     2. User's home directory (if enabled)
     
-    For each directory, looks for: {config_name}/config.{extension}
+    For each directory, looks for: {config_name}/{profile_filename}.{extension}
     """
     
     def __init__(
         self,
         config_name: str,
+        profile_filename: str = "config",
         extensions: List[str] = None,
         search_home: bool = True
     ):
@@ -35,10 +36,12 @@ class ConfigDiscovery:
         
         Args:
             config_name: Name of the configuration directory to search for
+            profile_filename: Name of the profile file without extension (default: "config")
             extensions: List of file extensions to search for (default: yaml, yml, json, toml)
             search_home: Whether to search in the user's home directory
         """
         self.config_name = config_name
+        self.profile_filename = profile_filename
         self.extensions = extensions or ["yaml", "yml", "json", "toml"]
         self.search_home = search_home
     
@@ -68,13 +71,13 @@ class ConfigDiscovery:
             search_locations = self._get_search_locations()
             raise ConfigNotFoundError(
                 f"No configuration files found for '{self.config_name}'. "
-                f"Searched for config.{{{','.join(self.extensions)}}} in: {search_locations}"
+                f"Searched for {self.profile_filename}.{{{','.join(self.extensions)}}} in: {search_locations}"
             )
         
         return config_files
     
     def _search_directory_tree(self) -> List[Path]:
-        """Search up directory tree for {config_name}/config.{ext}"""
+        """Search up directory tree for {config_name}/{profile_filename}.{ext}"""
         config_files = []
         current = Path.cwd()
         
@@ -87,7 +90,7 @@ class ConfigDiscovery:
         return config_files
     
     def _search_home_directory(self) -> List[Path]:
-        """Search home directory for {config_name}/config.{ext}"""
+        """Search home directory for {config_name}/{profile_filename}.{ext}"""
         home = Path.home()
         config_dir = home / self.config_name
         
@@ -101,7 +104,7 @@ class ConfigDiscovery:
         config_files = []
         
         for ext in self.extensions:
-            config_file = directory / f"config.{ext}"
+            config_file = directory / f"{self.profile_filename}.{ext}"
             if config_file.is_file():
                 config_files.append(config_file)
         

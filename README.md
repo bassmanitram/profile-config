@@ -120,6 +120,15 @@ print(config["log_level"])  # DEBUG (from development profile)
 
 Profile Config searches for configuration files by walking up the directory tree from the current working directory, then checking the home directory.
 
+### Search Pattern
+
+Default pattern: `{config_name}/{profile_filename}.{extension}`
+
+Examples:
+- `myapp/config.yaml` (default)
+- `myapp/settings.yaml` (custom filename)
+- `myapp/app.json` (custom filename)
+
 ### Search Order (highest to lowest precedence)
 
 ```
@@ -157,6 +166,30 @@ When running from `/home/user/projects/myapp/backend/`:
 2. Finds `../myapp/config.yaml` (parent directory)
 3. Finds `~/myapp/config.yaml` (home directory)
 4. Merges all three (current directory has highest precedence)
+
+### Custom Profile Filename
+
+Use a different filename instead of `config`:
+
+```python
+# Search for settings.yaml instead of config.yaml
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    profile_filename="settings"
+)
+```
+
+This searches for:
+- `./myapp/settings.yaml`
+- `../myapp/settings.yaml`
+- `~/myapp/settings.yaml`
+
+Use cases:
+- Organization naming standards (e.g., `settings.yaml`)
+- Multiple configuration types in same directory
+- Legacy system compatibility
+- More descriptive names (e.g., `database.yaml`, `api.yaml`)
 
 ## Configuration File Format
 
@@ -382,6 +415,17 @@ resolver = ProfileConfigResolver(
 )
 ```
 
+### Custom Profile Filename
+
+```python
+# Use settings.yaml instead of config.yaml
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    profile_filename="settings"
+)
+```
+
 ### Custom Inheritance Key
 
 ```python
@@ -589,6 +633,7 @@ pytest --cov=profile_config --cov-report=html
 ProfileConfigResolver(
     config_name: str,
     profile: str = "default",
+    profile_filename: str = "config",
     overrides: Optional[Union[Dict, PathLike, List[Union[Dict, PathLike]]]] = None,
     extensions: Optional[List[str]] = None,
     search_home: bool = True,
@@ -599,8 +644,9 @@ ProfileConfigResolver(
 
 **Parameters:**
 
-- `config_name`: Name of configuration (e.g., "myapp")
+- `config_name`: Name of configuration directory (e.g., "myapp")
 - `profile`: Profile name to resolve (default: "default")
+- `profile_filename`: Name of profile file without extension (default: "config")
 - `overrides`: Override values (dict, file path, or list of dicts/paths)
 - `extensions`: File extensions to search (default: ["yaml", "yml", "json", "toml"])
 - `search_home`: Whether to search home directory (default: True)

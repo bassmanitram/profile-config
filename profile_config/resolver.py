@@ -33,6 +33,7 @@ class ProfileConfigResolver:
         self,
         config_name: str,
         profile: str = "default",
+        profile_filename: str = "config",
         overrides: OverridesType = None,
         extensions: Optional[List[str]] = None,
         search_home: bool = True,
@@ -43,8 +44,9 @@ class ProfileConfigResolver:
         Initialize profile configuration resolver.
         
         Args:
-            config_name: Name of configuration (e.g., "myapp")
+            config_name: Name of configuration directory (e.g., "myapp")
             profile: Profile name to resolve (default: "default")
+            profile_filename: Name of profile file without extension (default: "config")
             overrides: Override values (highest precedence). Can be:
                 - Dict[str, Any]: Single override dictionary
                 - PathLike: Path to override file (yaml/json/toml)
@@ -56,11 +58,13 @@ class ProfileConfigResolver:
         """
         self.config_name = config_name
         self.profile = profile
+        self.profile_filename = profile_filename
         self.enable_interpolation = enable_interpolation
         
         # Initialize components
         self.discovery = ConfigDiscovery(
             config_name=config_name,
+            profile_filename=profile_filename,
             extensions=extensions,
             search_home=search_home,
         )
