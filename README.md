@@ -1,20 +1,73 @@
 # Profile Config
 
-[![PyPI version](https://badge.fury.io/py/profile-config.svg)](https://badge.fury.io/py/profile-config)
+Profile-based configuration management for Python applications.
 
-Hierarchical profile-based configuration management for Python applications.
+## What It Does
 
-Profile Config provides a robust solution for managing application configuration across different environments and deployment scenarios. It supports hierarchical configuration file discovery, profile inheritance, variable interpolation, and runtime overrides.
+Profile Config manages application configuration using profiles (e.g., development, staging, production). It discovers configuration files in your project hierarchy, merges them with proper precedence, and resolves the requested profile.
 
-## Features
+### Configuration Flow
 
-- **Hierarchical Discovery**: Automatically discovers configuration files by walking up the directory tree
-- **Profile Inheritance**: Profiles can inherit from other profiles with circular dependency detection
-- **Multiple Formats**: Supports YAML, JSON, and TOML configuration files
-- **Variable Interpolation**: Supports variable substitution using `${variable}` syntax
-- **Runtime Overrides**: Apply configuration overrides at runtime
-- **Configurable Search**: Customize search patterns and file locations
-- **Type Safety**: Built on OmegaConf for robust configuration merging
+```
+1. Discovery Phase
+   Search locations (highest to lowest precedence):
+   ./myapp/config.yaml          <- Current directory
+   ../myapp/config.yaml         <- Parent directory
+   ../../myapp/config.yaml      <- Grandparent directory
+   ~/myapp/config.yaml         <- Home directory
+
+2. Merge Phase
+   Files are merged with closer files taking precedence
+
+3. Profile Resolution
+   defaults + profile + inherited profiles
+
+4. Override Phase
+   Apply runtime overrides (highest precedence)
+
+5. Interpolation Phase
+   Resolve ${variable} references
+```
+
+### Example
+
+Given this configuration file at `myapp/config.yaml`:
+
+```yaml
+defaults:
+  host: localhost
+  port: 5432
+  debug: false
+
+profiles:
+  development:
+    debug: true
+    database: myapp_dev
+    
+  production:
+    host: prod-db.example.com
+    database: myapp_prod
+```
+
+This code:
+
+```python
+from profile_config import ProfileConfigResolver
+
+resolver = ProfileConfigResolver("myapp", profile="development")
+config = resolver.resolve()
+```
+
+Produces this configuration:
+
+```python
+{
+    "host": "localhost",      # from defaults
+    "port": 5432,             # from defaults
+    "debug": True,            # from development profile (overrides defaults)
+    "database": "myapp_dev"   # from development profile
+}
+```
 
 ## Installation
 
@@ -27,93 +80,160 @@ For TOML support on Python < 3.11:
 pip install profile-config[toml]
 ```
 
-## Quick Start
+## Basic Usage
 
-Create a configuration file at `myapp/config.yaml`:
+### 1. Create Configuration File
+
+Create `myapp/config.yaml` in your project:
 
 ```yaml
 defaults:
-  database_host: localhost
-  database_port: 5432
-  debug: false
+  timeout: 30
+  retries: 3
 
 profiles:
   development:
     debug: true
-    database_name: myapp_dev
+    log_level: DEBUG
     
   production:
-    database_name: myapp_prod
-    database_host: prod-db.example.com
+    debug: false
+    log_level: WARNING
 ```
 
-Or use TOML format at `myapp/config.toml`:
-
-```toml
-[defaults]
-database_host = "localhost"
-database_port = 5432
-debug = false
-
-[profiles.development]
-debug = true
-database_name = "myapp_dev"
-
-[profiles.production]
-database_name = "myapp_prod"
-database_host = "prod-db.example.com"
-```
-
-Use in your application:
+### 2. Load Configuration
 
 ```python
 from profile_config import ProfileConfigResolver
 
-# Resolve development profile
+# Load development profile
 resolver = ProfileConfigResolver("myapp", profile="development")
 config = resolver.resolve()
 
-print(config["debug"])  # True
-print(config["database_host"])  # localhost
-print(config["database_name"])  # myapp_dev
+# Access configuration values
+print(config["timeout"])    # 30 (from defaults)
+print(config["debug"])      # True (from development profile)
+print(config["log_level"])  # DEBUG (from development profile)
 ```
 
 ## Configuration File Discovery
 
-Profile Config uses a hierarchical search strategy to discover configuration files:
+Profile Config searches for configuration files by walking up the directory tree from the current working directory, then checking the home directory.
 
-1. **Current Directory Tree**: Walks up from current working directory
-   - `./myapp/config.{yaml,yml,json,toml}`
-   - `../myapp/config.{yaml,yml,json,toml}`
-   - `../../myapp/config.{yaml,yml,json,toml}`
-   - etc.
+### Search Pattern
 
-2. **Home Directory**: Searches user's home directory
-   - `$HOME/myapp/config.{yaml,yml,json,toml}`
+Default pattern: `{config_name}/{profile_filename}.{extension}`
 
-Files found in more specific locations (closer to current directory) take precedence over more general ones.
+Examples:
+- `myapp/config.yaml` (default)
+- `myapp/settings.yaml` (custom filename)
+- `myapp/app.json` (custom filename)
 
-## Supported Configuration Formats
+### Search Order (highest to lowest precedence)
 
-### YAML Format
+```
+Current directory:     ./myapp/config.yaml
+Parent directory:      ../myapp/config.yaml
+Grandparent directory: ../../myapp/config.yaml
+...
+Home directory:        ~/myapp/config.yaml
+```
+
+### File Extensions
+
+Searches for files with these extensions (in order):
+- `.yaml`
+- `.yml`
+- `.json`
+- `.toml`
+
+### Example Directory Structure
+
+```
+/home/user/projects/myapp/
+├── backend/
+│   └── myapp/
+│       └── config.yaml      <- Project-specific config
+└── myapp/
+    └── config.yaml          <- Shared config
+
+/home/user/myapp/
+└── config.yaml              <- User-specific config
+```
+
+When running from `/home/user/projects/myapp/backend/`:
+1. Finds `./myapp/config.yaml` (current directory)
+2. Finds `../myapp/config.yaml` (parent directory)
+3. Finds `~/myapp/config.yaml` (home directory)
+4. Merges all three (current directory has highest precedence)
+
+### Custom Profile Filename
+
+Use a different filename instead of `config`:
+
+```python
+# Search for settings.yaml instead of config.yaml
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    profile_filename="settings"
+)
+```
+
+This searches for:
+- `./myapp/settings.yaml`
+- `../myapp/settings.yaml`
+- `~/myapp/settings.yaml`
+
+Use cases:
+- Organization naming standards (e.g., `settings.yaml`)
+- Multiple configuration types in same directory
+- Legacy system compatibility
+- More descriptive names (e.g., `database.yaml`, `api.yaml`)
+
+## Configuration File Format
+
+### Structure
+
+```yaml
+# Optional: specify which profile to use by default
+default_profile: development
+
+# Optional: values applied to all profiles
+defaults:
+  timeout: 30
+  retries: 3
+  
+# Required: profile definitions
+profiles:
+  development:
+    debug: true
+    database: myapp_dev
+    
+  production:
+    debug: false
+    database: myapp_prod
+```
+
+### Supported Formats
+
+#### YAML
 ```yaml
 defaults:
-  database_host: localhost
-  features:
-    - user_auth
-    - api_v2
+  host: localhost
+  port: 5432
 
 profiles:
   development:
     debug: true
 ```
 
-### JSON Format
+#### JSON
 ```json
 {
   "defaults": {
-    "database_host": "localhost",
-    "features": ["user_auth", "api_v2"]
+    "host": "localhost",
+    "port": 5432
   },
   "profiles": {
     "development": {
@@ -123,117 +243,83 @@ profiles:
 }
 ```
 
-### TOML Format
+#### TOML
 ```toml
 [defaults]
-database_host = "localhost"
-features = ["user_auth", "api_v2"]
+host = "localhost"
+port = 5432
 
 [profiles.development]
 debug = true
 ```
 
-**TOML Benefits:**
-- **Type Safety**: Native support for strings, integers, floats, booleans, dates
-- **Readable**: Clean syntax without excessive nesting
-- **Standardized**: Official specification with compliant parsers
-- **Rich Data Types**: Arrays, inline tables, array of tables
-
 ## Profile Inheritance
 
-Profiles support inheritance using the `inherits` key:
+Profiles can inherit from other profiles using the `inherits` key.
+
+### Example
 
 ```yaml
 profiles:
   base:
-    database_host: localhost
+    host: localhost
     timeout: 30
     
   development:
     inherits: base
     debug: true
-    database_name: myapp_dev
+    database: myapp_dev
     
   staging:
     inherits: development
     debug: false
-    database_host: staging-db.example.com
+    host: staging-db.example.com
 ```
 
-TOML equivalent:
-```toml
-[profiles.base]
-database_host = "localhost"
-timeout = 30
+### Resolution Order
 
-[profiles.development]
-inherits = "base"
-debug = true
-database_name = "myapp_dev"
+For profile `staging`:
+1. Start with `base` profile
+2. Merge `development` profile (overrides `base`)
+3. Merge `staging` profile (overrides `development`)
 
-[profiles.staging]
-inherits = "development"
-debug = false
-database_host = "staging-db.example.com"
+Result:
+```python
+{
+    "host": "staging-db.example.com",  # from staging (overrides base)
+    "timeout": 30,                      # from base
+    "debug": False,                     # from staging (overrides development)
+    "database": "myapp_dev"             # from development
+}
 ```
 
-Inheritance chains are resolved automatically with circular dependency detection.
-
-## Team and Environment Management
-
-Handle team differences and multiple environments using profiles:
+### Multi-Level Inheritance
 
 ```yaml
 profiles:
-  # Base environment profiles
+  base:
+    timeout: 30
+    
   development:
+    inherits: base
     debug: true
-    database_name: myapp_dev
     
-  production:
-    debug: false
-    database_name: myapp_prod
-    
-  # Team-specific profiles
   development-team1:
     inherits: development
     team_id: team1
-    custom_endpoint: "https://team1.internal.com"
     
   development-team2:
     inherits: development
     team_id: team2
-    custom_endpoint: "https://team2.internal.com"
-    
-  production-team1:
-    inherits: production
-    team_id: team1
-    workers: 4
-    
-  production-team2:
-    inherits: production
-    team_id: team2
-    workers: 8
 ```
 
-Usage with environment variables:
-
-```python
-import os
-from profile_config import ProfileConfigResolver
-
-# Teams set TEAM_NAME in their environment
-team = os.environ.get("TEAM_NAME", "")
-env = os.environ.get("ENV", "development")
-
-profile = f"{env}-{team}" if team else env
-resolver = ProfileConfigResolver("myapp", profile=profile)
-config = resolver.resolve()
-```
+Circular inheritance is detected and raises an error.
 
 ## Variable Interpolation
 
-Configuration values support variable interpolation:
+Use `${variable}` syntax to reference other configuration values.
+
+### Example
 
 ```yaml
 defaults:
@@ -247,49 +333,96 @@ profiles:
     base_path: /tmp/${app_name}
 ```
 
-TOML equivalent:
-```toml
-[defaults]
-app_name = "myapp"
-base_path = "/opt/${app_name}"
-data_path = "${base_path}/data"
-log_path = "${base_path}/logs"
+### Resolution
 
-[profiles.development]
-base_path = "/tmp/${app_name}"
+For profile `development`:
+```python
+{
+    "app_name": "myapp",
+    "base_path": "/tmp/myapp",           # interpolated
+    "data_path": "/tmp/myapp/data",      # interpolated
+    "log_path": "/tmp/myapp/logs"        # interpolated
+}
 ```
 
 Variables are resolved after profile inheritance is complete.
 
 ## Runtime Overrides
 
-Apply configuration overrides at runtime:
+Apply configuration overrides at runtime with highest precedence.
+
+### Dictionary Override
 
 ```python
-overrides = {
-    "database_host": "override-db.example.com",
-    "debug": True,
-    "new_setting": "runtime_value"
-}
-
 resolver = ProfileConfigResolver(
-    "myapp", 
+    "myapp",
     profile="production",
-    overrides=overrides
+    overrides={"debug": True, "host": "test-db.example.com"}
 )
 config = resolver.resolve()
 ```
 
-## Advanced Usage
+### File Override
 
-### Custom Search Configuration
+```python
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="production",
+    overrides="/path/to/overrides.yaml"
+)
+config = resolver.resolve()
+```
+
+Supported formats: `.yaml`, `.yml`, `.json`, `.toml`
+
+### List of Overrides
+
+Apply multiple overrides in order (later overrides take precedence):
+
+```python
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="production",
+    overrides=[
+        "/path/to/base-overrides.yaml",
+        {"debug": True},
+        "/path/to/final-overrides.json"
+    ]
+)
+config = resolver.resolve()
+```
+
+### Precedence Order
+
+```
+1. Discovered config files (lowest)
+2. Profile resolution
+3. Override 1
+4. Override 2
+5. Override N (highest)
+```
+
+## Configuration Options
+
+### Customize Search Behavior
 
 ```python
 resolver = ProfileConfigResolver(
     config_name="myapp",
     profile="development",
     extensions=["yaml", "json"],  # Only search these formats
-    search_home=False,           # Don't search home directory
+    search_home=False,            # Don't search home directory
+)
+```
+
+### Custom Profile Filename
+
+```python
+# Use settings.yaml instead of config.yaml
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    profile_filename="settings"
 )
 ```
 
@@ -299,7 +432,7 @@ resolver = ProfileConfigResolver(
 # Use 'extends' instead of 'inherits'
 resolver = ProfileConfigResolver(
     "myapp",
-    profile="development", 
+    profile="development",
     inherit_key="extends"
 )
 ```
@@ -314,12 +447,14 @@ resolver = ProfileConfigResolver(
 )
 ```
 
+## Utility Methods
+
 ### List Available Profiles
 
 ```python
 resolver = ProfileConfigResolver("myapp")
 profiles = resolver.list_profiles()
-print(f"Available profiles: {profiles}")
+print(profiles)  # ['development', 'staging', 'production']
 ```
 
 ### Get Discovered Files
@@ -328,105 +463,149 @@ print(f"Available profiles: {profiles}")
 resolver = ProfileConfigResolver("myapp")
 files = resolver.get_config_files()
 for file_path in files:
-    print(f"Found config: {file_path}")
+    print(file_path)
 ```
 
-## Configuration File Format
+## Error Handling
 
-Configuration files support the following structure:
+Profile Config raises specific exceptions for different error conditions.
+
+### Exception Types
+
+```python
+from profile_config.exceptions import (
+    ConfigNotFoundError,      # No configuration files found
+    ProfileNotFoundError,     # Requested profile doesn't exist
+    CircularInheritanceError, # Circular inheritance detected
+    ConfigFormatError         # Invalid configuration file format
+)
+```
+
+### Example
+
+```python
+from profile_config import ProfileConfigResolver
+from profile_config.exceptions import ProfileNotFoundError
+
+try:
+    resolver = ProfileConfigResolver("myapp", profile="nonexistent")
+    config = resolver.resolve()
+except ProfileNotFoundError as e:
+    print(f"Profile not found: {e}")
+    # Handle error (use default profile, exit, etc.)
+```
+
+## Common Patterns
+
+### Environment-Based Configuration
+
+```python
+import os
+from profile_config import ProfileConfigResolver
+
+env = os.environ.get("ENV", "development")
+resolver = ProfileConfigResolver("myapp", profile=env)
+config = resolver.resolve()
+```
+
+### Team-Specific Configuration
 
 ```yaml
-# Optional: specify default profile name
-default_profile: development
-
-# Optional: global defaults applied to all profiles
-defaults:
-  timeout: 30
-  retries: 3
-  
-# Profile definitions
 profiles:
-  base:
-    database_host: localhost
-    cache_enabled: true
-    
   development:
-    inherits: base  # Optional: inherit from another profile
     debug: true
-    database_name: myapp_dev
     
-  production:
-    inherits: base
-    database_host: prod-db.example.com
-    database_name: myapp_prod
-    cache_ttl: 3600
+  development-team1:
+    inherits: development
+    team_id: team1
+    endpoint: "https://team1.internal.com"
+    
+  development-team2:
+    inherits: development
+    team_id: team2
+    endpoint: "https://team2.internal.com"
+```
+
+```python
+import os
+from profile_config import ProfileConfigResolver
+
+team = os.environ.get("TEAM_NAME", "")
+env = os.environ.get("ENV", "development")
+profile = f"{env}-{team}" if team else env
+
+resolver = ProfileConfigResolver("myapp", profile=profile)
+config = resolver.resolve()
+```
+
+### Configuration with Secrets
+
+Store secrets separately and merge at runtime:
+
+```python
+import json
+from pathlib import Path
+from profile_config import ProfileConfigResolver
+
+# Load base configuration
+resolver = ProfileConfigResolver("myapp", profile="production")
+config = resolver.resolve()
+
+# Load secrets from secure location
+secrets_file = Path("/etc/secrets/myapp.json")
+if secrets_file.exists():
+    with open(secrets_file) as f:
+        secrets = json.load(f)
+    config.update(secrets)
+```
+
+Or use overrides:
+
+```python
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="production",
+    overrides="/etc/secrets/myapp.json"
+)
+config = resolver.resolve()
 ```
 
 ## Format Comparison
 
 | Feature | YAML | JSON | TOML |
 |---------|------|------|------|
-| **Readability** | ✅ Excellent | ⚠️ Good | ✅ Excellent |
-| **Comments** | ✅ Yes | ❌ No | ✅ Yes |
-| **Multi-line strings** | ✅ Yes | ⚠️ Escaped | ✅ Yes |
-| **Type safety** | ⚠️ Inferred | ⚠️ Limited | ✅ Native |
-| **Nesting** | ✅ Natural | ✅ Natural | ⚠️ Verbose |
-| **Arrays** | ✅ Clean | ✅ Standard | ✅ Clean |
-| **Ecosystem** | ✅ Mature | ✅ Universal | ⚠️ Growing |
+| Comments | Yes | No | Yes |
+| Multi-line strings | Yes | Escaped only | Yes |
+| Type safety | Inferred | Limited | Native types |
+| Nesting | Natural | Natural | Verbose for deep nesting |
+| Readability | High | Medium | High |
+| Ecosystem | Mature | Universal | Growing |
 
-**Recommendations:**
-- **YAML**: Best for complex nested configurations
-- **JSON**: Best for API integration and data exchange
-- **TOML**: Best for application configuration with type safety
+### When to Use Each Format
 
-## Error Handling
-
-Profile Config provides specific exceptions for different error conditions:
-
-```python
-from profile_config import ProfileConfigResolver
-from profile_config.exceptions import (
-    ConfigNotFoundError,
-    ProfileNotFoundError, 
-    CircularInheritanceError,
-    ConfigFormatError
-)
-
-try:
-    resolver = ProfileConfigResolver("myapp", profile="nonexistent")
-    config = resolver.resolve()
-except ConfigNotFoundError:
-    print("No configuration files found")
-except ProfileNotFoundError as e:
-    print(f"Profile not found: {e}")
-except CircularInheritanceError as e:
-    print(f"Circular inheritance detected: {e}")
-except ConfigFormatError as e:
-    print(f"Configuration format error: {e}")
-```
+**YAML**: Complex nested configurations, human-edited files  
+**JSON**: API integration, machine-generated configs, data exchange  
+**TOML**: Application configuration with type safety, flat structures
 
 ## Examples
 
-The `examples/` directory contains comprehensive examples:
+The `examples/` directory contains working examples:
 
-- `basic_usage.py`: Basic configuration resolution and profile usage
-- `advanced_profiles.py`: Complex inheritance patterns and error handling
-- `web_app_config.py`: Real-world web application configuration management
-- `toml_usage.py`: TOML format features and syntax examples
+- `basic_usage.py` - Basic configuration and profile usage
+- `advanced_profiles.py` - Inheritance patterns and error handling
+- `web_app_config.py` - Web application configuration management
+- `toml_usage.py` - TOML format features
 
 Run examples:
 
 ```bash
 cd examples
 python basic_usage.py
-python advanced_profiles.py
-python web_app_config.py
-python toml_usage.py
 ```
 
 ## Development
 
-### Setup Development Environment
+### Setup
 
 ```bash
 git clone https://github.com/bassmanitram/profile-config.git
@@ -446,18 +625,39 @@ pytest
 pytest --cov=profile_config --cov-report=html
 ```
 
-### Code Formatting
+## API Reference
 
-```bash
-black profile_config/ examples/
-isort profile_config/ examples/
+### ProfileConfigResolver
+
+```python
+ProfileConfigResolver(
+    config_name: str,
+    profile: str = "default",
+    profile_filename: str = "config",
+    overrides: Optional[Union[Dict, PathLike, List[Union[Dict, PathLike]]]] = None,
+    extensions: Optional[List[str]] = None,
+    search_home: bool = True,
+    inherit_key: str = "inherits",
+    enable_interpolation: bool = True,
+)
 ```
 
-### Type Checking
+**Parameters:**
 
-```bash
-mypy profile_config/
-```
+- `config_name`: Name of configuration directory (e.g., "myapp")
+- `profile`: Profile name to resolve (default: "default")
+- `profile_filename`: Name of profile file without extension (default: "config")
+- `overrides`: Override values (dict, file path, or list of dicts/paths)
+- `extensions`: File extensions to search (default: ["yaml", "yml", "json", "toml"])
+- `search_home`: Whether to search home directory (default: True)
+- `inherit_key`: Key name for profile inheritance (default: "inherits")
+- `enable_interpolation`: Whether to enable variable interpolation (default: True)
+
+**Methods:**
+
+- `resolve() -> Dict[str, Any]`: Resolve and return configuration
+- `list_profiles() -> List[str]`: List available profiles
+- `get_config_files() -> List[Path]`: Get discovered configuration files
 
 ## License
 
@@ -465,15 +665,14 @@ MIT License. See LICENSE file for details.
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and submit pull requests to the [main repository](https://github.com/bassmanitram/profile-config).
+Contributions are welcome. Please read CONTRIBUTING.md for guidelines.
 
 ## Links
 
-- **GitHub Repository**: https://github.com/bassmanitram/profile-config
-- **PyPI Package**: https://pypi.org/project/profile-config/
-- **Documentation**: https://bassmanitram.github.io/profile-config/
-- **Issue Tracker**: https://github.com/bassmanitram/profile-config/issues
+- GitHub: https://github.com/bassmanitram/profile-config
+- PyPI: https://pypi.org/project/profile-config/
+- Issues: https://github.com/bassmanitram/profile-config/issues
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for version history and changes.
+See CHANGELOG.md for version history.

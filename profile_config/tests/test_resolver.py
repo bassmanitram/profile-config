@@ -20,7 +20,7 @@ class TestProfileConfigResolver:
         
         assert resolver.config_name == "myapp"
         assert resolver.profile == "default"
-        assert resolver.overrides == {}
+        assert resolver.override_list == []
         assert resolver.enable_interpolation is True
         
     def test_init_custom_values(self):
@@ -37,7 +37,7 @@ class TestProfileConfigResolver:
         
         assert resolver.config_name == "testapp"
         assert resolver.profile == "dev"
-        assert resolver.overrides == overrides
+        assert resolver.override_list == [overrides]
         assert resolver.enable_interpolation is False
         
     def test_resolve_simple_config(self):
