@@ -40,9 +40,9 @@ jobs:
       run: |
         isort --check-only profile_config/ examples/
 
-    - name: Lint with flake8 (source code only)
+    - name: Lint with flake8
       run: |
-        flake8 profile_config/ --exclude=profile_config/tests/ examples/
+        flake8 profile_config/ examples/ --exclude=profile_config/tests
 
     - name: Test with pytest
       run: |
