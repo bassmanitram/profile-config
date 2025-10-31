@@ -35,7 +35,7 @@ profiles:
     features:
       feature_a: true
       feature_b: false
-      
+
   # Development base
   dev_base:
     inherits: base
@@ -45,7 +45,7 @@ profiles:
     log_level: DEBUG
     features:
       feature_b: true
-      
+
   # Local development
   local:
     inherits: dev_base
@@ -54,7 +54,7 @@ profiles:
       path: ./local.db
     cache:
       enabled: false
-      
+
   # Remote development
   remote_dev:
     inherits: dev_base
@@ -63,7 +63,7 @@ profiles:
       ssl: true
     monitoring:
       enabled: true
-      
+
   # Staging base
   staging_base:
     inherits: base
@@ -72,14 +72,14 @@ profiles:
       name: myapp_staging
     cache:
       ttl: 1800
-      
+
   # Staging
   staging:
     inherits: staging_base
     monitoring:
       enabled: true
       alerts: true
-      
+
   # Production base
   prod_base:
     inherits: base
@@ -91,7 +91,7 @@ profiles:
       ttl: 7200
     timeout: 60
     retries: 5
-    
+
   # Production
   production:
     inherits: prod_base
@@ -105,13 +105,13 @@ profiles:
       feature_b: true
       feature_c: true
 """
-    
+
     # Create config directory and file
     config_dir = Path("complex-app")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.yaml"
     config_file.write_text(config_content)
-    
+
     print(f"Created complex config at: {config_file.absolute()}")
     return config_file
 
@@ -119,18 +119,18 @@ profiles:
 def demonstrate_inheritance_chain():
     """Demonstrate complex inheritance chains."""
     print("=== Complex Inheritance Chain Example ===\n")
-    
+
     config_file = create_complex_config()
-    
+
     try:
         # Show inheritance chain for production
         print("1. Production profile inheritance chain:")
         print("   production -> prod_base -> base -> defaults")
         print()
-        
+
         resolver = ProfileConfigResolver("complex-app", profile="production")
         prod_config = resolver.resolve()
-        
+
         print("   Resolved production configuration:")
         for key, value in sorted(prod_config.items()):
             if isinstance(value, dict):
@@ -140,15 +140,15 @@ def demonstrate_inheritance_chain():
             else:
                 print(f"   {key}: {value}")
         print()
-        
+
         # Compare with local development
         print("2. Local development profile inheritance chain:")
         print("   local -> dev_base -> base -> defaults")
         print()
-        
+
         resolver = ProfileConfigResolver("complex-app", profile="local")
         local_config = resolver.resolve()
-        
+
         print("   Resolved local configuration:")
         for key, value in sorted(local_config.items()):
             if isinstance(value, dict):
@@ -158,7 +158,7 @@ def demonstrate_inheritance_chain():
             else:
                 print(f"   {key}: {value}")
         print()
-        
+
     finally:
         # Cleanup
         config_file.unlink()
@@ -168,23 +168,23 @@ def demonstrate_inheritance_chain():
 def demonstrate_profile_comparison():
     """Demonstrate comparing different profiles."""
     print("=== Profile Comparison Example ===\n")
-    
+
     config_file = create_complex_config()
-    
+
     try:
         profiles_to_compare = ["local", "staging", "production"]
         configs = {}
-        
+
         # Resolve all profiles
         for profile in profiles_to_compare:
             resolver = ProfileConfigResolver("complex-app", profile=profile)
             configs[profile] = resolver.resolve()
-        
+
         # Compare specific settings
         print("Database configuration comparison:")
         print(f"{'Setting':<15} {'Local':<20} {'Staging':<20} {'Production':<20}")
         print("-" * 80)
-        
+
         db_settings = ["driver", "host", "name", "port", "pool_size"]
         for setting in db_settings:
             values = []
@@ -192,30 +192,30 @@ def demonstrate_profile_comparison():
                 db_config = configs[profile].get("database", {})
                 value = db_config.get(setting, "N/A")
                 values.append(str(value)[:19])  # Truncate for display
-            
+
             print(f"{setting:<15} {values[0]:<20} {values[1]:<20} {values[2]:<20}")
         print()
-        
+
         # Compare feature flags
         print("Feature flags comparison:")
         print(f"{'Feature':<15} {'Local':<10} {'Staging':<10} {'Production':<10}")
         print("-" * 50)
-        
+
         all_features = set()
         for config in configs.values():
             features = config.get("features", {})
             all_features.update(features.keys())
-        
+
         for feature in sorted(all_features):
             values = []
             for profile in profiles_to_compare:
                 features = configs[profile].get("features", {})
                 value = features.get(feature, False)
                 values.append(str(value))
-            
+
             print(f"{feature:<15} {values[0]:<10} {values[1]:<10} {values[2]:<10}")
         print()
-        
+
     finally:
         # Cleanup
         config_file.unlink()
@@ -225,7 +225,7 @@ def demonstrate_profile_comparison():
 def demonstrate_error_handling():
     """Demonstrate error handling scenarios."""
     print("=== Error Handling Examples ===\n")
-    
+
     # Example 1: Circular inheritance
     print("1. Circular inheritance detection:")
     circular_config = """
@@ -240,12 +240,12 @@ profiles:
     inherits: a
     value: c_value
 """
-    
+
     config_dir = Path("error-demo")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.yaml"
     config_file.write_text(circular_config)
-    
+
     try:
         resolver = ProfileConfigResolver("error-demo", profile="a")
         try:
@@ -253,7 +253,7 @@ profiles:
         except CircularInheritanceError as e:
             print(f"   Caught CircularInheritanceError: {e}")
         print()
-        
+
         # Example 2: Nonexistent profile
         print("2. Nonexistent profile handling:")
         try:
@@ -262,14 +262,14 @@ profiles:
         except ProfileNotFoundError as e:
             print(f"   Caught ProfileNotFoundError: {e}")
         print()
-        
+
         # Example 3: Profile listing for debugging
         print("3. Available profiles for debugging:")
         resolver = ProfileConfigResolver("error-demo")
         profiles = resolver.list_profiles()
         print(f"   Available profiles: {profiles}")
         print()
-        
+
     finally:
         # Cleanup
         config_file.unlink()
@@ -279,39 +279,37 @@ profiles:
 def demonstrate_custom_inheritance_key():
     """Demonstrate using custom inheritance key."""
     print("=== Custom Inheritance Key Example ===\n")
-    
+
     config_content = """
 profiles:
   base:
     database: sqlite:///base.db
     debug: false
-    
+
   development:
     extends: base  # Using 'extends' instead of 'inherits'
     debug: true
     port: 3000
 """
-    
+
     config_dir = Path("custom-key-demo")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.yaml"
     config_file.write_text(config_content)
-    
+
     try:
         # This would fail with default inherit_key
         print("Using custom inheritance key 'extends':")
-        
+
         resolver = ProfileConfigResolver(
-            "custom-key-demo", 
-            profile="development",
-            inherit_key="extends"
+            "custom-key-demo", profile="development", inherit_key="extends"
         )
         config = resolver.resolve()
-        
+
         for key, value in sorted(config.items()):
             print(f"   {key}: {value}")
         print()
-        
+
     finally:
         # Cleanup
         config_file.unlink()

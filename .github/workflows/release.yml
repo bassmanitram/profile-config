@@ -73,20 +73,20 @@ jobs:
         import os
         import glob
         import subprocess
-        
+
         wheel_files = glob.glob("dist/*.whl")
         if not wheel_files:
             raise FileNotFoundError("No wheel file found in dist/")
-        
+
         wheel_file = wheel_files[0]
         print(f"Installing wheel: {wheel_file}")
-        
+
         result = subprocess.run(["pip", "install", wheel_file], capture_output=True, text=True)
         if result.returncode != 0:
             print("STDOUT:", result.stdout)
             print("STDERR:", result.stderr)
             raise RuntimeError(f"pip install failed with return code {result.returncode}")
-        
+
         print("Installation successful!")
         print("STDOUT:", result.stdout)
       shell: python
@@ -138,7 +138,7 @@ jobs:
         # Extract version from tag
         VERSION=${GITHUB_REF#refs/tags/v}
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        
+
         # Generate changelog from commits since last tag
         LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
         if [ -n "$LAST_TAG" ]; then
@@ -146,7 +146,7 @@ jobs:
         else
           CHANGELOG=$(git log --pretty=format:"- %s")
         fi
-        
+
         # Save changelog to file
         echo "## Changes in v$VERSION" > changelog.md
         echo "" >> changelog.md

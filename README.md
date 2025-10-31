@@ -1,5 +1,14 @@
 # Profile Config
 
+[![Tests](https://github.com/bassmanitram/profile-config/actions/workflows/test.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/test.yml)
+[![Lint](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml)
+[![Examples](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml)
+[![Code Quality](https://github.com/bassmanitram/profile-config/actions/workflows/quality.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/quality.yml)
+[![codecov](https://codecov.io/gh/bassmanitram/profile-config/branch/main/graph/badge.svg)](https://codecov.io/gh/bassmanitram/profile-config)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://badge.fury.io/py/profile-config.svg)](https://badge.fury.io/py/profile-config)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Profile-based configuration management for Python applications.
 
 ## What It Does
@@ -43,7 +52,7 @@ profiles:
   development:
     debug: true
     database: myapp_dev
-    
+
   production:
     host: prod-db.example.com
     database: myapp_prod
@@ -95,7 +104,7 @@ profiles:
   development:
     debug: true
     log_level: DEBUG
-    
+
   production:
     debug: false
     log_level: WARNING
@@ -203,13 +212,13 @@ default_profile: development
 defaults:
   timeout: 30
   retries: 3
-  
+
 # Required: profile definitions
 profiles:
   development:
     debug: true
     database: myapp_dev
-    
+
   production:
     debug: false
     database: myapp_prod
@@ -264,12 +273,12 @@ profiles:
   base:
     host: localhost
     timeout: 30
-    
+
   development:
     inherits: base
     debug: true
     database: myapp_dev
-    
+
   staging:
     inherits: development
     debug: false
@@ -299,15 +308,15 @@ Result:
 profiles:
   base:
     timeout: 30
-    
+
   development:
     inherits: base
     debug: true
-    
+
   development-team1:
     inherits: development
     team_id: team1
-    
+
   development-team2:
     inherits: development
     team_id: team2
@@ -514,12 +523,12 @@ config = resolver.resolve()
 profiles:
   development:
     debug: true
-    
+
   development-team1:
     inherits: development
     team_id: team1
     endpoint: "https://team1.internal.com"
-    
+
   development-team2:
     inherits: development
     team_id: team2
@@ -583,8 +592,8 @@ config = resolver.resolve()
 
 ### When to Use Each Format
 
-**YAML**: Complex nested configurations, human-edited files  
-**JSON**: API integration, machine-generated configs, data exchange  
+**YAML**: Complex nested configurations, human-edited files
+**JSON**: API integration, machine-generated configs, data exchange
 **TOML**: Application configuration with type safety, flat structures
 
 ## Examples

@@ -1,0 +1,53 @@
+name: Examples
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-examples:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.10", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[toml]"
+
+    - name: Test basic_usage example
+      run: |
+        cd examples
+        python basic_usage.py
+
+    - name: Test advanced_profiles example
+      run: |
+        cd examples
+        python advanced_profiles.py
+
+    - name: Test web_app_config example
+      run: |
+        cd examples
+        python web_app_config.py
+
+    - name: Test toml_usage example
+      run: |
+        cd examples
+        python toml_usage.py
+
+    - name: Verify example config files created
+      run: |
+        cd examples
+        test -f myapp/config.yaml || echo "Warning: myapp/config.yaml not created"
+        test -f complex-app/config.yaml || echo "Warning: complex-app/config.yaml not created"

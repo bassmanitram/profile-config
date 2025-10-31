@@ -8,21 +8,21 @@ This package provides configuration resolution with:
 - Multiple file format support
 """
 
-from .resolver import ProfileConfigResolver
 from .discovery import ConfigDiscovery
-from .profiles import ProfileResolver
-from .merger import ConfigMerger
 from .exceptions import (
-    ProfileConfigError,
-    ConfigNotFoundError,
-    ProfileNotFoundError,
     CircularInheritanceError,
+    ConfigNotFoundError,
+    ProfileConfigError,
+    ProfileNotFoundError,
 )
+from .merger import ConfigMerger
+from .profiles import ProfileResolver
+from .resolver import ProfileConfigResolver
 
 __version__ = "1.1.0"
 __all__ = [
     "ProfileConfigResolver",
-    "ConfigDiscovery", 
+    "ConfigDiscovery",
     "ProfileResolver",
     "ConfigMerger",
     "ProfileConfigError",

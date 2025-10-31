@@ -15,7 +15,7 @@ from profile_config import ProfileConfigResolver
 
 def create_toml_config():
     """Create a comprehensive TOML configuration file."""
-    toml_content = '''
+    toml_content = """
 # TOML Configuration Example
 # TOML is a minimal configuration file format that's easy to read
 
@@ -141,80 +141,86 @@ file = "/var/log/myapp-prod.log"
 user_registration = true
 email_verification = true
 social_login = true
-'''
-    
+"""
+
     # Create config directory and file
     config_dir = Path("myapp")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.toml"
     config_file.write_text(toml_content)
-    
+
     return config_file
 
 
 def demonstrate_toml_features():
     """Demonstrate TOML-specific features and syntax."""
     print("=== TOML Configuration Features ===\n")
-    
+
     config_file = create_toml_config()
-    
+
     try:
         # Example 1: Basic TOML loading
         print("1. Loading TOML Configuration:")
-        resolver = ProfileConfigResolver("myapp", profile="development", search_home=False)
+        resolver = ProfileConfigResolver(
+            "myapp", profile="development", search_home=False
+        )
         config = resolver.resolve()
-        
+
         print(f"   App name: {config['app_name']}")
         print(f"   Debug mode: {config['debug']}")
         print(f"   Server port: {config['server']['port']}")
-        print(f"   Database: {config['database']['name']} on {config['database']['host']}")
+        print(
+            f"   Database: {config['database']['name']} on {config['database']['host']}"
+        )
         print()
-        
+
         # Example 2: Array handling
         print("2. TOML Arrays:")
         print(f"   Allowed hosts: {config['allowed_hosts']}")
         print(f"   Cache servers: {len(config['cache_servers'])} configured")
-        for i, server in enumerate(config['cache_servers']):
+        for i, server in enumerate(config["cache_servers"]):
             print(f"     {i+1}. {server['name']}: {server['host']}:{server['port']}")
         print()
-        
+
         # Example 3: Nested tables
         print("3. TOML Nested Tables:")
-        features = config['features']
+        features = config["features"]
         print("   Feature flags:")
         for feature, enabled in features.items():
             status = "✅" if enabled else "❌"
             print(f"     {status} {feature}")
         print()
-        
+
         # Example 4: Profile comparison
         print("4. Profile Comparison:")
         profiles = ["development", "staging", "production"]
-        
+
         print("   Database Configuration:")
         print("   Profile      Host                    Database        Pool Size")
         print("   " + "-" * 65)
-        
+
         for profile in profiles:
-            resolver = ProfileConfigResolver("myapp", profile=profile, search_home=False)
+            resolver = ProfileConfigResolver(
+                "myapp", profile=profile, search_home=False
+            )
             config = resolver.resolve()
-            db = config['database']
-            pool_size = db.get('pool_size', 'N/A')
+            db = config["database"]
+            pool_size = db.get("pool_size", "N/A")
             print(f"   {profile:<12} {db['host']:<23} {db['name']:<15} {pool_size}")
         print()
-        
+
         # Example 5: TOML vs YAML syntax comparison
         print("5. TOML vs YAML Syntax Comparison:")
         print()
         print("   TOML:")
         print("   ```toml")
         print("   [database]")
-        print("   host = \"localhost\"")
+        print('   host = "localhost"')
         print("   port = 5432")
         print("   ")
         print("   [[cache_servers]]")
-        print("   name = \"redis-1\"")
-        print("   host = \"localhost\"")
+        print('   name = "redis-1"')
+        print('   host = "localhost"')
         print("   ```")
         print()
         print("   YAML:")
@@ -228,7 +234,7 @@ def demonstrate_toml_features():
         print("       host: localhost")
         print("   ```")
         print()
-        
+
     finally:
         # Cleanup
         config_file.unlink()
@@ -238,8 +244,8 @@ def demonstrate_toml_features():
 def demonstrate_toml_variable_interpolation():
     """Demonstrate variable interpolation with TOML."""
     print("=== TOML Variable Interpolation ===\n")
-    
-    toml_content = '''
+
+    toml_content = """
 [defaults]
 app_name = "myapp"
 environment = "development"
@@ -259,29 +265,31 @@ base_path = "/tmp/${app_name}"
 [profiles.production]
 environment = "prod"
 base_path = "/var/lib/${app_name}"
-'''
-    
+"""
+
     config_dir = Path("myapp")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.toml"
     config_file.write_text(toml_content)
-    
+
     try:
         print("Variable interpolation with different profiles:")
         print()
-        
+
         for profile in ["development", "production"]:
             print(f"Profile: {profile}")
-            resolver = ProfileConfigResolver("myapp", profile=profile, search_home=False)
+            resolver = ProfileConfigResolver(
+                "myapp", profile=profile, search_home=False
+            )
             config = resolver.resolve()
-            
+
             print(f"   Base path: {config['base_path']}")
             print(f"   Data path: {config['data_path']}")
             print(f"   Log path: {config['log_path']}")
             print(f"   Database name: {config['database']['name']}")
             print(f"   Database URL: {config['database']['url']}")
             print()
-            
+
     finally:
         # Cleanup
         config_file.unlink()
@@ -291,7 +299,7 @@ base_path = "/var/lib/${app_name}"
 def demonstrate_toml_data_types():
     """Demonstrate TOML data type support."""
     print("=== TOML Data Types ===\n")
-    
+
     toml_content = '''
 [defaults]
 # String
@@ -332,34 +340,36 @@ name = "web2"
 ip = "192.168.1.2"
 active = false
 '''
-    
+
     config_dir = Path("myapp")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.toml"
     config_file.write_text(toml_content)
-    
+
     try:
         resolver = ProfileConfigResolver("myapp", search_home=False)
         config = resolver.resolve()
-        
+
         print("TOML supports rich data types:")
         print(f"   String: {config['app_name']} ({type(config['app_name']).__name__})")
         print(f"   Integer: {config['port']} ({type(config['port']).__name__})")
         print(f"   Float: {config['timeout']} ({type(config['timeout']).__name__})")
         print(f"   Boolean: {config['debug']} ({type(config['debug']).__name__})")
         print(f"   Array: {config['tags']} ({type(config['tags']).__name__})")
-        print(f"   Inline table: {config['database']} ({type(config['database']).__name__})")
+        print(
+            f"   Inline table: {config['database']} ({type(config['database']).__name__})"
+        )
         print(f"   Array of tables: {len(config['servers'])} servers")
-        
+
         print("\n   Multi-line string:")
         print(f"   {repr(config['description'])}")
-        
+
         print("\n   Server details:")
-        for server in config['servers']:
-            status = "🟢" if server['active'] else "🔴"
+        for server in config["servers"]:
+            status = "🟢" if server["active"] else "🔴"
             print(f"     {status} {server['name']}: {server['ip']}")
         print()
-        
+
     finally:
         # Cleanup
         config_file.unlink()
@@ -369,21 +379,21 @@ active = false
 def demonstrate_toml_error_handling():
     """Demonstrate TOML error handling."""
     print("=== TOML Error Handling ===\n")
-    
+
     # Example 1: Invalid TOML syntax
     print("1. Invalid TOML Syntax:")
-    invalid_toml = '''
+    invalid_toml = """
 [defaults
 missing_bracket = "this will fail"
-'''
-    
+"""
+
     config_dir = Path("myapp")
     config_dir.mkdir(exist_ok=True)
     config_file = config_dir / "config.toml"
-    
+
     try:
         config_file.write_text(invalid_toml)
-        
+
         try:
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()
@@ -392,28 +402,30 @@ missing_bracket = "this will fail"
             print(f"   ✅ Caught error: {type(e).__name__}")
             print(f"   Message: {str(e)}")
         print()
-        
+
         # Example 2: Valid TOML, invalid profile
         print("2. Valid TOML, Invalid Profile:")
-        valid_toml = '''
+        valid_toml = """
 [defaults]
 app_name = "myapp"
 
 [profiles.development]
 debug = true
-'''
-        
+"""
+
         config_file.write_text(valid_toml)
-        
+
         try:
-            resolver = ProfileConfigResolver("myapp", profile="nonexistent", search_home=False)
+            resolver = ProfileConfigResolver(
+                "myapp", profile="nonexistent", search_home=False
+            )
             config = resolver.resolve()
             print("   ERROR: Should have failed!")
         except Exception as e:
             print(f"   ✅ Caught error: {type(e).__name__}")
             print(f"   Message: {str(e)}")
         print()
-        
+
     finally:
         # Cleanup
         if config_file.exists():
