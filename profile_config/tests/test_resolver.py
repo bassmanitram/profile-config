@@ -2,6 +2,7 @@
 Tests for the main ProfileConfigResolver.
 """
 
+import contextlib
 import os
 import tempfile
 from pathlib import Path
@@ -10,6 +11,19 @@ import pytest
 
 from profile_config import ProfileConfigResolver
 from profile_config.exceptions import ConfigNotFoundError, ProfileNotFoundError
+
+
+
+
+@contextlib.contextmanager
+def chdir_context(path):
+    """Context manager to temporarily change directory (Windows-safe)."""
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(original_cwd)
 
 
 class TestProfileConfigResolver:
@@ -43,8 +57,7 @@ class TestProfileConfigResolver:
 
     def test_resolve_simple_config(self):
         """Test resolving a simple configuration."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file
             config_dir = Path(tmpdir) / "myapp"
@@ -71,8 +84,7 @@ profiles:
 
     def test_resolve_with_inheritance(self):
         """Test resolving configuration with profile inheritance."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file
             config_dir = Path(tmpdir) / "myapp"
@@ -108,8 +120,7 @@ profiles:
 
     def test_resolve_with_overrides(self):
         """Test resolving configuration with overrides."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file
             config_dir = Path(tmpdir) / "myapp"
@@ -147,8 +158,7 @@ profiles:
 
     def test_resolve_multiple_config_files(self):
         """Test resolving with multiple configuration files."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create base config in parent directory
             parent_config_dir = Path(tmpdir) / "myapp"
@@ -200,8 +210,7 @@ profiles:
 
     def test_resolve_with_interpolation(self):
         """Test resolving configuration with variable interpolation."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file with interpolation
             config_dir = Path(tmpdir) / "myapp"
@@ -232,8 +241,7 @@ profiles:
 
     def test_resolve_interpolation_disabled(self):
         """Test resolving configuration with interpolation disabled."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file with interpolation
             config_dir = Path(tmpdir) / "myapp"
@@ -260,8 +268,7 @@ defaults:
 
     def test_resolve_nonexistent_profile(self):
         """Test resolving a nonexistent profile."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file
             config_dir = Path(tmpdir) / "myapp"
@@ -284,8 +291,7 @@ profiles:
 
     def test_resolve_no_config_files(self):
         """Test resolving when no config files exist."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             resolver = ProfileConfigResolver("nonexistent", search_home=False)
 
@@ -294,8 +300,7 @@ profiles:
 
     def test_list_profiles(self):
         """Test listing available profiles."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file
             config_dir = Path(tmpdir) / "myapp"
@@ -320,8 +325,7 @@ profiles:
 
     def test_list_profiles_no_config(self):
         """Test listing profiles when no config files exist."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             resolver = ProfileConfigResolver("nonexistent", search_home=False)
             profiles = resolver.list_profiles()
@@ -330,8 +334,7 @@ profiles:
 
     def test_get_config_files(self):
         """Test getting discovered configuration files."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create config file
             config_dir = Path(tmpdir) / "myapp"
@@ -347,8 +350,7 @@ profiles:
 
     def test_get_config_files_no_config(self):
         """Test getting config files when none exist."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             resolver = ProfileConfigResolver("nonexistent", search_home=False)
             files = resolver.get_config_files()

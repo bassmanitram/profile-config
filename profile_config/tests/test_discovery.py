@@ -235,6 +235,9 @@ class TestConfigDiscovery:
                 discovery.discover_config_files()
 
             error_msg = str(exc_info.value)
-            assert str(tmp_path / "myapp") in error_msg
+            # On Windows, paths may be repr'd with escaped backslashes
+            expected_path = str(tmp_path / "myapp")
+            # Normalize both for comparison
+            assert expected_path in error_msg.replace('\\\\', '\\')
         finally:
             os.chdir(original_cwd)

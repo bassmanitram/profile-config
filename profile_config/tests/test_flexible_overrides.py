@@ -3,6 +3,7 @@ Tests for flexible overrides feature.
 """
 
 import json
+import contextlib
 import os
 import tempfile
 from pathlib import Path
@@ -13,13 +14,25 @@ from profile_config import ProfileConfigResolver
 from profile_config.exceptions import ConfigFormatError
 
 
+
+
+@contextlib.contextmanager
+def chdir_context(path):
+    """Context manager to temporarily change directory (Windows-safe)."""
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(original_cwd)
+
+
 class TestFlexibleOverrides:
     """Test flexible overrides functionality."""
 
     def test_override_with_file_path_yaml(self):
         """Test override with YAML file path."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -59,8 +72,7 @@ extra: from_file
 
     def test_override_with_file_path_json(self):
         """Test override with JSON file path."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -92,8 +104,7 @@ profiles:
 
     def test_override_with_pathlib_path(self):
         """Test override with pathlib.Path object."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -123,8 +134,7 @@ profiles:
 
     def test_override_with_list_of_dicts(self):
         """Test override with list of dictionaries."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -153,8 +163,7 @@ profiles:
 
     def test_override_with_mixed_list(self):
         """Test override with mixed list of dicts and file paths."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -195,8 +204,7 @@ profiles:
 
     def test_override_precedence_order(self):
         """Test that overrides are applied in correct order."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -231,8 +239,7 @@ profiles:
 
     def test_override_invalid_type(self):
         """Test that invalid override type raises error."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -250,8 +257,7 @@ profiles:
 
     def test_override_invalid_type_in_list(self):
         """Test that invalid type in list raises error."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -269,8 +275,7 @@ profiles:
 
     def test_override_missing_file(self):
         """Test that missing override file raises error."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -288,8 +293,7 @@ profiles:
 
     def test_override_invalid_yaml_file(self):
         """Test that invalid YAML file raises error."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -311,8 +315,7 @@ profiles:
 
     def test_override_empty_list(self):
         """Test that empty override list works."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -335,8 +338,7 @@ profiles:
 
     def test_override_none(self):
         """Test that None override works (default behavior)."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
@@ -362,8 +364,7 @@ profiles:
 
     def test_override_with_interpolation(self):
         """Test that overrides work with variable interpolation."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chdir(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
 
             # Create main config
             config_dir = Path(tmpdir) / "myapp"
