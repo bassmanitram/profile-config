@@ -344,7 +344,8 @@ profiles:
             files = resolver.get_config_files()
 
             assert len(files) == 1
-            assert files[0] == config_file
+            # Resolve both paths to handle macOS /private/var vs /var symlink
+            assert files[0].resolve() == config_file.resolve()
 
     def test_get_config_files_no_config(self):
         """Test getting config files when none exist."""
