@@ -151,3 +151,4 @@ tmp/
 .coverage.*
 
 docs/research/
+local/

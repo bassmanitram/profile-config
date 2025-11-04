@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e ".[dev,toml]"
+        pip install -e ".[dev]"
 
     - name: Run pre-commit hooks
       run: |
@@ -29,8 +29,8 @@ jobs:
 
     - name: Security check with bandit
       run: |
-        bandit -r profile_config/ --exclude profile_config/tests/ -f json -o bandit-report.json || true
-        bandit -r profile_config/ --exclude profile_config/tests/ -f txt || true
+        bandit -r profile_config/ -f json -o bandit-report.json || true
+        bandit -r profile_config/ -f txt || true
 
     - name: Upload bandit report
       if: always()

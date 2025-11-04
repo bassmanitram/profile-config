@@ -26,28 +26,30 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[toml]"
 
-    - name: Test basic_usage example
+    - name: Test basic usage example
       run: |
         cd examples
         python basic_usage.py
 
-    - name: Test advanced_profiles example
+    - name: Test advanced profiles example
       run: |
         cd examples
         python advanced_profiles.py
 
-    - name: Test web_app_config example
-      run: |
-        cd examples
-        python web_app_config.py
-
-    - name: Test toml_usage example
+    - name: Test TOML usage example
       run: |
         cd examples
         python toml_usage.py
 
-    - name: Verify example config files created
+    - name: Test web app config example
       run: |
         cd examples
-        test -f myapp/config.yaml || echo "Warning: myapp/config.yaml not created"
-        test -f complex-app/config.yaml || echo "Warning: complex-app/config.yaml not created"
+        python web_app_config.py
+
+    - name: Test help output for all examples
+      run: |
+        cd examples
+        python basic_usage.py --help || echo "No help option"
+        python advanced_profiles.py --help || echo "No help option"
+        python toml_usage.py --help || echo "No help option"
+        python web_app_config.py --help || echo "No help option"

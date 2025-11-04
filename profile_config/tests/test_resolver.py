@@ -13,8 +13,6 @@ from profile_config import ProfileConfigResolver
 from profile_config.exceptions import ConfigNotFoundError, ProfileNotFoundError
 
 
-
-
 @contextlib.contextmanager
 def chdir_context(path):
     """Context manager to temporarily change directory (Windows-safe)."""

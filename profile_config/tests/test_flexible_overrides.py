@@ -2,8 +2,8 @@
 Tests for flexible overrides feature.
 """
 
-import json
 import contextlib
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -12,8 +12,6 @@ import pytest
 
 from profile_config import ProfileConfigResolver
 from profile_config.exceptions import ConfigFormatError
-
-
 
 
 @contextlib.contextmanager

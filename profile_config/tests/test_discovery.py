@@ -238,6 +238,6 @@ class TestConfigDiscovery:
             # On Windows, paths may be repr'd with escaped backslashes
             expected_path = str(tmp_path / "myapp")
             # Normalize both for comparison
-            assert expected_path in error_msg.replace('\\\\', '\\')
+            assert expected_path in error_msg.replace("\\\\", "\\")
         finally:
             os.chdir(original_cwd)

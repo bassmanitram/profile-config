@@ -31,14 +31,9 @@ jobs:
       run: |
         isort --check-only --diff profile_config/ examples/
 
-    - name: Lint with flake8
+    - name: Type check with mypy
       run: |
-        flake8 profile_config/ examples/ --exclude=profile_config/tests
-
-    - name: Type check with mypy (non-blocking)
-      continue-on-error: true
-      run: |
-        mypy profile_config/ --exclude profile_config/tests/
+        mypy profile_config/
 
     - name: Check package metadata
       run: |
