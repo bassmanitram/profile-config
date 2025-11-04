@@ -4,7 +4,6 @@
 [![Lint](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml)
 [![Examples](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml)
 [![Code Quality](https://github.com/bassmanitram/profile-config/actions/workflows/quality.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/quality.yml)
-[![codecov](https://codecov.io/gh/bassmanitram/profile-config/branch/main/graph/badge.svg)](https://codecov.io/gh/bassmanitram/profile-config)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI version](https://badge.fury.io/py/profile-config.svg)](https://badge.fury.io/py/profile-config)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
