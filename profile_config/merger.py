@@ -50,10 +50,10 @@ class ConfigMerger:
         omega_configs = [OmegaConf.create(config) for config in valid_configs]
 
         # Merge all configurations
-        merged = OmegaConf.merge(*omega_configs)
+        merged = OmegaConf.merge(*omega_configs)  # type: ignore[arg-type]
 
         logger.debug(f"Merged {len(valid_configs)} configuration sources")
-        return self._to_dict(merged, enable_interpolation)
+        return self._to_dict(merged, enable_interpolation)  # type: ignore[arg-type]
 
     def merge_config_files(
         self, config_data_list: List[Dict[str, Any]], enable_interpolation: bool = True
@@ -88,11 +88,11 @@ class ConfigMerger:
         if enable_interpolation:
             # Resolve interpolations and convert to dict
             try:
-                return OmegaConf.to_container(omega_config, resolve=True)
+                return OmegaConf.to_container(omega_config, resolve=True)  # type: ignore[return-value]
             except Exception as e:
                 logger.warning(f"Variable interpolation failed: {e}")
                 # Fall back to unresolved config
-                return OmegaConf.to_container(omega_config, resolve=False)
+                return OmegaConf.to_container(omega_config, resolve=False)  # type: ignore[return-value]
         else:
             # Return without resolving interpolations
-            return OmegaConf.to_container(omega_config, resolve=False)
+            return OmegaConf.to_container(omega_config, resolve=False)  # type: ignore[return-value]
