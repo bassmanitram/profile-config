@@ -70,6 +70,7 @@ profile = "black"
 line_length = 88
 
 [tool.mypy]
+files = ["profile_config"]
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false
