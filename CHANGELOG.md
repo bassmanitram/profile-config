@@ -26,15 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced `ProfileResolver.resolve_profile()` to handle missing "default" profile gracefully
 - Updated README with comprehensive default profile documentation (98 new lines)
 - Added debug logging when auto-creating default profile
+- Updated GitHub Actions workflow to use `softprops/action-gh-release@v2` (was v1)
+- Code style improvements and formatting consistency
 
 ### Technical Details
-- Modified `profile_config/profiles.py` (5 lines added)
+- Modified `profile_config/profiles.py` (12 lines added)
 - Added 3 comprehensive test cases in `profile_config/tests/test_resolver.py`:
   - `test_default_profile_auto_creation`
   - `test_explicit_default_profile_takes_precedence`
   - `test_non_default_profile_still_raises_error`
 - Test coverage maintained at 98%
 - Total tests increased from 75 to 78
+- Merged PR #6: Dependabot update for GitHub Actions
 
 ### Backward Compatibility
 - 100% backward compatible
