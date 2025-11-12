@@ -20,7 +20,7 @@ try:
     HAS_TOML = True
 except ImportError:
     try:
-        import tomli as tomllib  # Fallback for older Python
+        import tomli as tomllib  # type: ignore[no-redef]
 
         HAS_TOML = True
     except ImportError:
