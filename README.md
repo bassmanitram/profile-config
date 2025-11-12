@@ -261,6 +261,103 @@ port = 5432
 debug = true
 ```
 
+## Using the Default Profile
+
+The "default" profile has special behavior that makes it easy to use only the defaults section without defining an explicit profile.
+
+### Automatic Creation
+
+When you request `profile="default"` and no "default" profile exists in your configuration, an empty profile is automatically created. This returns only the values from the `defaults` section.
+
+```yaml
+defaults:
+  host: localhost
+  port: 5432
+  timeout: 30
+
+profiles:
+  development:
+    debug: true
+    port: 3000
+  
+  production:
+    host: prod-db.com
+    debug: false
+```
+
+```python
+# No explicit "default" profile defined in config
+resolver = ProfileConfigResolver("myapp", profile="default")
+config = resolver.resolve()
+
+# Returns only defaults:
+# {
+#     "host": "localhost",
+#     "port": 5432,
+#     "timeout": 30
+# }
+```
+
+### Explicit Default Profile
+
+If you define an explicit "default" profile, it takes precedence over the auto-creation:
+
+```yaml
+defaults:
+  host: localhost
+  port: 5432
+  timeout: 30
+
+profiles:
+  default:
+    timeout: 60      # Override default timeout
+    custom: true     # Add custom setting
+  
+  development:
+    debug: true
+```
+
+```python
+resolver = ProfileConfigResolver("myapp", profile="default")
+config = resolver.resolve()
+
+# Returns defaults + default profile:
+# {
+#     "host": "localhost",
+#     "port": 5432,
+#     "timeout": 60,      # Overridden by default profile
+#     "custom": True      # Added by default profile
+# }
+```
+
+### Use Cases
+
+**1. Base configuration without environment-specific overrides:**
+```python
+# Get base configuration only
+resolver = ProfileConfigResolver("myapp", profile="default")
+base_config = resolver.resolve()
+```
+
+**2. Fallback when no specific profile is needed:**
+```python
+import os
+
+# Use environment-specific profile if set, otherwise use defaults
+env = os.environ.get("ENV", "default")
+resolver = ProfileConfigResolver("myapp", profile=env)
+config = resolver.resolve()
+```
+
+**3. Testing with minimal configuration:**
+```python
+# Tests can use "default" profile for baseline behavior
+def test_app_with_defaults():
+    resolver = ProfileConfigResolver("myapp", profile="default")
+    config = resolver.resolve()
+    # Test with minimal config
+```
+
 ## Profile Inheritance
 
 Profiles can inherit from other profiles using the `inherits` key.
@@ -601,6 +698,7 @@ The `examples/` directory contains working examples:
 
 - `basic_usage.py` - Basic configuration and profile usage
 - `advanced_profiles.py` - Inheritance patterns and error handling
+- `default_profile_usage.py` - Default profile auto-creation and use cases
 - `web_app_config.py` - Web application configuration management
 - `toml_usage.py` - TOML format features
 

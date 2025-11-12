@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-11-12
+
+### Added
+- **Automatic Default Profile Creation**: The "default" profile is now automatically created when requested but not explicitly defined in the configuration
+  - When `profile="default"` is specified and no explicit default profile exists, returns only the values from the `defaults` section
+  - Explicit default profiles still work as before (backward compatible)
+  - Eliminates the need to add `default: {}` to every configuration file
+  - Makes `profile="default"` intuitive for getting base configuration
+- New documentation section in README: "Using the Default Profile"
+  - Explains automatic creation behavior
+  - Documents explicit default profile usage
+  - Provides three practical use cases with examples
+- New example script: `examples/default_profile_usage.py`
+  - Demonstrates auto-creation of default profile
+  - Shows explicit default profile with inheritance
+  - Illustrates using default as environment fallback
+
+### Changed
+- Enhanced `ProfileResolver.resolve_profile()` to handle missing "default" profile gracefully
+- Updated README with comprehensive default profile documentation (98 new lines)
+- Added debug logging when auto-creating default profile
+
+### Technical Details
+- Modified `profile_config/profiles.py` (5 lines added)
+- Added 3 comprehensive test cases in `profile_config/tests/test_resolver.py`:
+  - `test_default_profile_auto_creation`
+  - `test_explicit_default_profile_takes_precedence`
+  - `test_non_default_profile_still_raises_error`
+- Test coverage maintained at 98%
+- Total tests increased from 75 to 78
+
+### Backward Compatibility
+- 100% backward compatible
+- Explicit default profiles continue to work unchanged
+- Only affects behavior when "default" profile is requested but not defined
+- Non-default profiles still raise `ProfileNotFoundError` if not found
+
+### Use Cases Enabled
+1. Base configuration without environment-specific overrides
+2. Environment fallback pattern: `os.environ.get("ENV", "default")`
+3. Testing with minimal configuration
+4. Simplified local development setup
+
 ## [1.1.0] - 2025-10-29
 
 ### Added

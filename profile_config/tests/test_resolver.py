@@ -355,3 +355,102 @@ profiles:
             files = resolver.get_config_files()
 
             assert files == []
+
+    def test_default_profile_auto_creation(self):
+        """Test that 'default' profile auto-creates when not defined."""
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
+            config_dir = Path(tmpdir) / "testapp"
+            config_dir.mkdir()
+            config_file = config_dir / "config.yaml"
+            
+            # Config WITHOUT a "default" profile
+            config_file.write_text(
+                """
+defaults:
+  host: localhost
+  port: 5432
+  timeout: 30
+
+profiles:
+  development:
+    debug: true
+    port: 3000
+  
+  production:
+    host: prod-db.com
+    debug: false
+"""
+            )
+            
+            # Should work and return only defaults
+            resolver = ProfileConfigResolver("testapp", profile="default", search_home=False)
+            config = resolver.resolve()
+            
+            assert config == {
+                "host": "localhost",
+                "port": 5432,
+                "timeout": 30
+            }
+
+    def test_explicit_default_profile_takes_precedence(self):
+        """Test that explicit 'default' profile is used when it exists."""
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
+            config_dir = Path(tmpdir) / "testapp"
+            config_dir.mkdir()
+            config_file = config_dir / "config.yaml"
+            
+            # Config WITH an explicit "default" profile
+            config_file.write_text(
+                """
+defaults:
+  host: localhost
+  port: 5432
+  timeout: 30
+
+profiles:
+  default:
+    timeout: 60
+    custom: true
+  
+  development:
+    debug: true
+"""
+            )
+            
+            resolver = ProfileConfigResolver("testapp", profile="default", search_home=False)
+            config = resolver.resolve()
+            
+            # Should use explicit default profile (overrides timeout, adds custom)
+            assert config == {
+                "host": "localhost",
+                "port": 5432,
+                "timeout": 60,
+                "custom": True
+            }
+
+    def test_non_default_profile_still_raises_error(self):
+        """Test that non-existent profiles (other than 'default') still raise errors."""
+        with tempfile.TemporaryDirectory() as tmpdir, chdir_context(tmpdir):
+            config_dir = Path(tmpdir) / "testapp"
+            config_dir.mkdir()
+            config_file = config_dir / "config.yaml"
+            
+            config_file.write_text(
+                """
+defaults:
+  host: localhost
+
+profiles:
+  development:
+    debug: true
+"""
+            )
+            
+            # Non-existent profile should still raise error
+            resolver = ProfileConfigResolver("testapp", profile="nonexistent", search_home=False)
+            
+            with pytest.raises(ProfileNotFoundError) as exc_info:
+                resolver.resolve()
+            
+            assert "nonexistent" in str(exc_info.value)
+            assert "Available profiles" in str(exc_info.value)
