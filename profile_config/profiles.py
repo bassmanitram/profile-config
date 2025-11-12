@@ -43,7 +43,7 @@ class ProfileResolver:
 
         Returns:
             Resolved configuration dictionary
-            
+
         Notes:
             If profile "default" is requested but doesn't exist, an empty profile
             is automatically created, returning only the defaults section.
@@ -73,7 +73,7 @@ class ProfileResolver:
                     "Profile 'default' not found, using empty profile (defaults only)"
                 )
                 return defaults.copy()
-            
+
             # Try default profile if different from requested
             if profile_name != default_profile and default_profile in profiles:
                 logger.warning(

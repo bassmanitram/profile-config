@@ -279,7 +279,7 @@ profiles:
   development:
     debug: true
     port: 3000
-  
+
   production:
     host: prod-db.com
     debug: false
@@ -312,7 +312,7 @@ profiles:
   default:
     timeout: 60      # Override default timeout
     custom: true     # Add custom setting
-  
+
   development:
     debug: true
 ```
