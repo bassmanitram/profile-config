@@ -8,6 +8,8 @@ This package provides configuration resolution with:
 - Multiple file format support
 """
 
+import logging
+
 from .discovery import ConfigDiscovery
 from .exceptions import (
     CircularInheritanceError,
@@ -18,6 +20,10 @@ from .exceptions import (
 from .merger import ConfigMerger
 from .profiles import ProfileResolver
 from .resolver import ProfileConfigResolver
+
+# Add NullHandler to prevent "No handler found" warnings
+# Applications using this library should configure their own handlers
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __version__ = "1.2.0"
 __all__ = [
