@@ -39,6 +39,9 @@ class ProfileConfigResolver:
         search_home: bool = True,
         inherit_key: str = "inherits",
         enable_interpolation: bool = True,
+        apply_environment: bool = True,
+        environment_key: str = "env_vars",
+        override_environment: bool = False,
     ):
         """
         Initialize profile configuration resolver.
@@ -55,11 +58,21 @@ class ProfileConfigResolver:
             search_home: Whether to search home directory
             inherit_key: Key name used for profile inheritance (default: "inherits")
             enable_interpolation: Whether to enable variable interpolation
+            apply_environment: Whether to apply environment variables from config (default: True)
+            environment_key: Key name for environment variables section (default: "env_vars")
+            override_environment: Whether to override existing environment variables (default: False)
         """
         self.config_name = config_name
         self.profile = profile
         self.profile_filename = profile_filename
         self.enable_interpolation = enable_interpolation
+        self.apply_environment = apply_environment
+        self.environment_key = environment_key
+        self.override_environment = override_environment
+
+        # Track environment variable application
+        self._env_applied: Dict[str, str] = {}
+        self._env_skipped: Dict[str, str] = {}
 
         # Initialize components
         self.discovery = ConfigDiscovery(
@@ -126,6 +139,84 @@ class ProfileConfigResolver:
         logger.debug(f"Processed {len(processed)} override sources")
         return processed
 
+    def _apply_environment_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Extract and apply environment variables from config.
+
+        Args:
+            config: Configuration dictionary
+
+        Returns:
+            Configuration dictionary with env_vars section removed
+        """
+        # Reset tracking
+        self._env_applied = {}
+        self._env_skipped = {}
+
+        # Always remove the environment key from config
+        config_copy = dict(config)
+        env_vars = config_copy.pop(self.environment_key, None)
+
+        if not self.apply_environment:
+            return config_copy
+
+        if not env_vars:
+            # Empty or missing - nothing to apply
+            return config_copy
+
+        if not isinstance(env_vars, dict):
+            logger.warning(
+                f"'{self.environment_key}' section must be a dictionary, found {type(env_vars).__name__}"
+            )
+            return config_copy
+
+        # Apply environment variables
+        for key, value in env_vars.items():
+            if not isinstance(key, str):
+                logger.warning(
+                    f"Environment variable key must be string, skipping: {key}"
+                )
+                continue
+
+            # Convert value to string
+            str_value = str(value) if value is not None else ""
+
+            # Check if variable already exists
+            if key in os.environ and not self.override_environment:
+                self._env_skipped[key] = str_value
+                logger.debug(
+                    f"Environment variable '{key}' already exists, skipping "
+                    f"(override_environment=False)"
+                )
+            else:
+                os.environ[key] = str_value
+                self._env_applied[key] = str_value
+                logger.debug(f"Set environment variable '{key}' from config")
+
+        applied_count = len(self._env_applied)
+        skipped_count = len(self._env_skipped)
+        total_count = applied_count + skipped_count
+
+        if applied_count > 0 or skipped_count > 0:
+            logger.info(
+                f"Processed {total_count} environment variables: "
+                f"{applied_count} applied, {skipped_count} skipped"
+            )
+
+        return config_copy
+
+    def get_environment_info(self) -> Dict[str, Dict[str, str]]:
+        """
+        Get information about environment variables applied from config.
+
+        Returns:
+            Dictionary with 'applied' and 'skipped' environment variables
+        """
+        return {
+            "applied": dict(self._env_applied),
+            "skipped": dict(self._env_skipped),
+        }
+
     def resolve(self) -> Dict[str, Any]:
         """
         Resolve configuration with full precedence handling.
@@ -135,9 +226,10 @@ class ProfileConfigResolver:
         2. Load and merge configuration files (most specific first)
         3. Resolve profile with inheritance
         4. Apply overrides in order (highest precedence)
+        5. Apply environment variables from config (if enabled)
 
         Returns:
-            Resolved configuration dictionary
+            Resolved configuration dictionary (without env_vars section)
 
         Raises:
             ConfigNotFoundError: If no configuration files are found
@@ -189,6 +281,9 @@ class ProfileConfigResolver:
             final_config = self.merger.merge_configs(
                 profile_config, enable_interpolation=self.enable_interpolation
             )
+
+        # Step 6: Apply environment variables and remove from config
+        final_config = self._apply_environment_variables(final_config)
 
         logger.info(
             f"Resolved configuration for profile '{self.profile}' with {len(final_config)} keys"

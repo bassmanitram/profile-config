@@ -448,6 +448,261 @@ For profile `development`:
     "data_path": "/tmp/myapp/data",      # interpolated
     "log_path": "/tmp/myapp/logs"        # interpolated
 }
+
+## Environment Variables
+
+You can automatically set environment variables from your configuration using the `env_vars` section. This feature is useful for applications that read configuration from `os.environ` or for setting up the environment before importing modules.
+
+### Basic Usage
+
+```yaml
+defaults:
+  env_vars:
+    DATABASE_URL: "postgresql://localhost:5432/mydb"
+    LOG_LEVEL: "INFO"
+    API_TIMEOUT: "30"
+
+profiles:
+  production:
+    env_vars:
+      DATABASE_URL: "postgresql://prod-db.example.com:5432/mydb"
+      LOG_LEVEL: "WARNING"
+```
+
+```python
+import os
+from profile_config import ProfileConfigResolver
+
+resolver = ProfileConfigResolver("myapp", profile="production")
+config = resolver.resolve()
+
+# Environment variables are now set
+print(os.environ["DATABASE_URL"])  # postgresql://prod-db.example.com:5432/mydb
+print(os.environ["LOG_LEVEL"])      # WARNING
+print(os.environ["API_TIMEOUT"])    # 30
+```
+
+The `env_vars` section is automatically removed from the returned configuration.
+
+### Variable Interpolation
+
+Environment variables support interpolation from other configuration values:
+
+```yaml
+defaults:
+  app_name: myapp
+  database:
+    host: localhost
+    port: 5432
+    name: mydb
+  env_vars:
+    APP_NAME: "${app_name}"
+    DATABASE_URL: "postgresql://${database.host}:${database.port}/${database.name}"
+    DATA_DIR: "/var/data/${app_name}"
+
+profiles:
+  production:
+    database:
+      host: prod-db.example.com
+```
+
+```python
+resolver = ProfileConfigResolver("myapp", profile="production")
+config = resolver.resolve()
+
+print(os.environ["DATABASE_URL"])  # postgresql://prod-db.example.com:5432/mydb
+```
+
+### Profile-Specific Environment Variables
+
+Environment variables merge with profile overrides:
+
+```yaml
+defaults:
+  env_vars:
+    LOG_LEVEL: "INFO"
+    DEBUG_MODE: "false"
+
+profiles:
+  development:
+    env_vars:
+      LOG_LEVEL: "DEBUG"
+      DEBUG_MODE: "true"
+      DEV_SERVER: "http://localhost:8000"
+
+  production:
+    env_vars:
+      LOG_LEVEL: "WARNING"
+      SENTRY_DSN: "https://..."
+```
+
+### Safe Mode (Default)
+
+By default, existing environment variables are not overwritten. This respects values injected by container orchestration (Docker, Kubernetes) or CI/CD systems:
+
+```python
+import os
+
+# Variable already exists
+os.environ["LOG_LEVEL"] = "ERROR"
+
+resolver = ProfileConfigResolver("myapp", profile="development")
+config = resolver.resolve()
+
+# LOG_LEVEL remains "ERROR" (not overwritten)
+print(os.environ["LOG_LEVEL"])  # ERROR
+
+# Check what was skipped
+env_info = resolver.get_environment_info()
+print(env_info["skipped"])  # {'LOG_LEVEL': 'DEBUG'}
+```
+
+### Override Mode
+
+Force configuration values to override existing environment variables:
+
+```python
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    override_environment=True  # Override existing vars
+)
+config = resolver.resolve()
+
+# LOG_LEVEL is now overwritten with config value
+```
+
+### Disable Environment Variables
+
+Disable the feature entirely:
+
+```python
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    apply_environment=False  # Don't set any environment variables
+)
+config = resolver.resolve()
+
+# Environment variables are not set
+# env_vars section remains in returned config
+```
+
+### Custom Key Name
+
+Use a different key name instead of `env_vars`:
+
+```yaml
+defaults:
+  exports:  # Custom key name
+    MY_VAR: "value"
+```
+
+```python
+resolver = ProfileConfigResolver(
+    "myapp",
+    environment_key="exports"  # Use 'exports' instead of 'env_vars'
+)
+config = resolver.resolve()
+```
+
+### Type Conversion
+
+Non-string values are automatically converted to strings:
+
+```yaml
+defaults:
+  env_vars:
+    PORT: 8080        # Integer
+    DEBUG: true       # Boolean
+    RATIO: 3.14       # Float
+    EMPTY: null       # Null
+```
+
+Results in:
+```python
+os.environ["PORT"]   # "8080"
+os.environ["DEBUG"]  # "True"
+os.environ["RATIO"]  # "3.14"
+os.environ["EMPTY"]  # ""
+```
+
+### Tracking Applied Variables
+
+Check which environment variables were applied or skipped:
+
+```python
+resolver = ProfileConfigResolver("myapp", profile="development")
+config = resolver.resolve()
+
+env_info = resolver.get_environment_info()
+
+# Variables that were set
+for key, value in env_info["applied"].items():
+    print(f"Set {key}={value}")
+
+# Variables that were skipped (already existed)
+for key, value in env_info["skipped"].items():
+    print(f"Skipped {key} (config wanted '{value}', kept existing value)")
+```
+
+### Configuration Options
+
+```python
+ProfileConfigResolver(
+    config_name="myapp",
+    profile="development",
+    apply_environment=True,          # Enable/disable feature (default: True)
+    environment_key="env_vars",      # Config key name (default: "env_vars")
+    override_environment=False,      # Override existing vars (default: False)
+)
+```
+
+### Use Cases
+
+**Application Bootstrap**: Set environment variables before importing modules that read from `os.environ`:
+
+```python
+# Bootstrap environment first
+resolver = ProfileConfigResolver("myapp", profile="production")
+config = resolver.resolve()
+
+# Now safe to import modules that use os.environ
+import my_app
+my_app.run()
+```
+
+**Container Orchestration**: Provide defaults while respecting injected secrets:
+
+```python
+# Kubernetes injects secrets as environment variables
+# Config provides non-sensitive defaults
+# override_environment=False ensures secrets aren't overwritten
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="production",
+    override_environment=False  # Respect K8s secrets
+)
+```
+
+**Development Environment**: Override everything for local development:
+
+```python
+# Force all config values for consistent dev environment
+resolver = ProfileConfigResolver(
+    "myapp",
+    profile="development",
+    override_environment=True  # Override everything
+)
+```
+
+### Security Considerations
+
+- Never commit sensitive values (passwords, API keys) to configuration files
+- Use secret management systems (Kubernetes Secrets, AWS Secrets Manager, etc.) for credentials
+- The `env_vars` feature is for non-sensitive configuration values
+- Default behavior (`override_environment=False`) is safe - respects externally injected secrets
+
 ```
 
 Variables are resolved after profile inheritance is complete.
@@ -700,6 +955,7 @@ The `examples/` directory contains working examples:
 - `advanced_profiles.py` - Inheritance patterns and error handling
 - `default_profile_usage.py` - Default profile auto-creation and use cases
 - `web_app_config.py` - Web application configuration management
+- `env_vars_example.py` - Environment variable injection and configuration
 - `toml_usage.py` - TOML format features
 
 Run examples:
@@ -745,6 +1001,9 @@ ProfileConfigResolver(
     search_home: bool = True,
     inherit_key: str = "inherits",
     enable_interpolation: bool = True,
+    apply_environment: bool = True,
+    environment_key: str = "env_vars",
+    override_environment: bool = False,
 )
 ```
 
@@ -758,11 +1017,16 @@ ProfileConfigResolver(
 - `search_home`: Whether to search home directory (default: True)
 - `inherit_key`: Key name for profile inheritance (default: "inherits")
 - `enable_interpolation`: Whether to enable variable interpolation (default: True)
+- `apply_environment`: Whether to apply environment variables from config (default: True)
+- `environment_key`: Key name for environment variables section (default: "env_vars")
+- `override_environment`: Whether to override existing environment variables (default: False)
 
 **Methods:**
 
 - `resolve() -> Dict[str, Any]`: Resolve and return configuration
 - `list_profiles() -> List[str]`: List available profiles
+- `get_config_files() -> List[Path]`: Get discovered configuration files
+- `get_environment_info() -> Dict[str, Dict[str, str]]`: Get information about applied/skipped environment variables
 - `get_config_files() -> List[Path]`: Get discovered configuration files
 
 ## License

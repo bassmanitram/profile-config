@@ -46,6 +46,11 @@ jobs:
         cd examples
         python web_app_config.py
 
+    - name: Test environment variables example
+      run: |
+        cd examples
+        python env_vars_example.py
+
     - name: Test help output for all examples
       run: |
         cd examples
@@ -53,3 +58,4 @@ jobs:
         python advanced_profiles.py --help || echo "No help option"
         python toml_usage.py --help || echo "No help option"
         python web_app_config.py --help || echo "No help option"
+        python env_vars_example.py --help || echo "No help option"
