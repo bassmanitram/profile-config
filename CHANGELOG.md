@@ -5,6 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-13
+
+### Added
+- **Environment Variable Injection**: Automatically set environment variables from configuration using the `env_vars` section
+  - New `env_vars` configuration section for defining environment variables that are set when configuration is resolved
+  - Variables are set in `os.environ` automatically during `resolve()`
+  - Supports variable interpolation in environment variable values using `${...}` syntax
+  - Profile-aware: environment variables merge with profile overrides following standard precedence rules
+  - Type conversion: non-string values (integers, booleans, floats, null) automatically converted to strings
+  - Safe by default: existing environment variables are not overwritten (respects container orchestration and CI/CD injected values)
+  - The `env_vars` section is automatically removed from the returned configuration dictionary
+- New configuration parameters for `ProfileConfigResolver`:
+  - `apply_environment` (default: `True`): Enable/disable environment variable application
+  - `environment_key` (default: `"env_vars"`): Customize the configuration key name for environment variables
+  - `override_environment` (default: `False`): Control whether to override existing environment variables
+- New method: `get_environment_info()` returns dictionary with `applied` and `skipped` environment variables for observability
+- Comprehensive documentation section in README: "Environment Variables"
+  - Basic usage examples
+  - Variable interpolation examples
+  - Profile-specific environment variables
+  - Safe mode and override mode documentation
+  - Type conversion reference
+  - Use cases: Application Bootstrap, Container Orchestration, Development Environment
+  - Security considerations and best practices
+- New example script: `examples/env_vars_example.py` demonstrating all environment variable features
+- Updated API Reference section in README with new parameters and method
+
+### Changed
+- Enhanced `ProfileConfigResolver` with environment variable handling
+- Updated GitHub Actions examples workflow to test new example
+- Updated README Examples section to include `env_vars_example.py`
+
+### Technical Details
+- Modified `profile_config/resolver.py` (98 lines added)
+- Added `_apply_environment_variables()` method to extract and apply environment variables
+- Added environment tracking attributes: `_env_applied` and `_env_skipped`
+- Added 12 comprehensive test cases in `profile_config/tests/test_env_vars.py`:
+  - Basic environment variable application
+  - Variable interpolation in env_vars
+  - Profile-specific environment variables
+  - Safe mode (respecting existing variables)
+  - Override mode (forcing config values)
+  - Disabling the feature
+  - Custom key names
+  - Runtime overrides with interpolation
+  - Type conversion
+  - Empty/missing/invalid env_vars sections
+- Test coverage maintained at 98%
+- Total tests increased from 78 to 90
+- All code properly formatted (black, isort) and linted (flake8)
+
+### Security
+- Safe default behavior: `override_environment=False` prevents overwriting existing environment variables
+- Respects secrets injected by container orchestration or CI/CD systems
+- Documentation emphasizes not committing sensitive values to configuration files
+- Recommends using secret management systems for credentials
+
+### Backward Compatibility
+- 100% backward compatible
+- Feature is enabled by default but only activates if `env_vars` section is present in configuration
+- Existing configurations without `env_vars` section continue to work unchanged
+- All new parameters are optional with safe defaults
+- No migration required
+
 ## [1.2.0] - 2025-11-12
 
 ### Added
