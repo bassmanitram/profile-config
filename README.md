@@ -2,10 +2,10 @@
 
 [![Tests](https://github.com/bassmanitram/profile-config/actions/workflows/test.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/test.yml)
 [![Lint](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/lint.yml)
-[![Examples](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml)
 [![Code Quality](https://github.com/bassmanitram/profile-config/actions/workflows/quality.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/quality.yml)
+[![Examples](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml/badge.svg)](https://github.com/bassmanitram/profile-config/actions/workflows/examples.yml)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyPI version](https://badge.fury.io/py/profile-config.svg)](https://badge.fury.io/py/profile-config)
+[![PyPI version](https://img.shields.io/pypi/v/profile-config.svg)](https://pypi.org/project/profile-config/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Profile-based configuration management for Python applications.

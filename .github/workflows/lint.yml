@@ -39,7 +39,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy profile_config/
+        mypy --python-version=3.10 profile_config/
 
     - name: Check package metadata
       run: |
