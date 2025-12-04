@@ -4,6 +4,8 @@ Main profile configuration resolver.
 
 import logging
 import os
+import re
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -42,6 +44,7 @@ class ProfileConfigResolver:
         apply_environment: bool = True,
         environment_key: str = "env_vars",
         override_environment: bool = False,
+        command_timeout: float = 2.0,
     ):
         """
         Initialize profile configuration resolver.
@@ -61,6 +64,7 @@ class ProfileConfigResolver:
             apply_environment: Whether to apply environment variables from config (default: True)
             environment_key: Key name for environment variables section (default: "env_vars")
             override_environment: Whether to override existing environment variables (default: False)
+            command_timeout: Timeout in seconds for command execution (default: 2.0)
         """
         self.config_name = config_name
         self.profile = profile
@@ -69,6 +73,7 @@ class ProfileConfigResolver:
         self.apply_environment = apply_environment
         self.environment_key = environment_key
         self.override_environment = override_environment
+        self.command_timeout = command_timeout
 
         # Track environment variable application
         self._env_applied: Dict[str, str] = {}
@@ -139,6 +144,121 @@ class ProfileConfigResolver:
         logger.debug(f"Processed {len(processed)} override sources")
         return processed
 
+    def _expand_value(self, value: Any, context: str = "") -> Any:
+        """
+        Expand command substitutions in a single value.
+
+        Processes $(...) syntax by executing commands with shell expansion.
+        Failed commands or empty output return None.
+
+        Args:
+            value: Value to expand (only processes strings)
+            context: Context for logging (e.g., key name)
+
+        Returns:
+            Expanded value or None if command failed
+        """
+        if not isinstance(value, str):
+            return value
+
+        # Pattern to match $(command) syntax
+        cmd_pattern = re.compile(r"\$\(([^)]+)\)")
+
+        # Find all command substitutions in the value
+        matches = cmd_pattern.findall(value)
+        if not matches:
+            return value
+
+        # Process each command substitution
+        expanded_value = value
+        for cmd in matches:
+            try:
+                logger.debug(
+                    f"Executing command{' for ' + context if context else ''}: {cmd}"
+                )
+
+                # Execute command with shell expansion and current environment
+                proc_result = subprocess.run(
+                    cmd,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=self.command_timeout,
+                    env=os.environ.copy(),
+                )
+
+                if proc_result.returncode != 0:
+                    stderr = proc_result.stderr.strip()
+                    logger.error(
+                        f"Command failed{' for ' + context if context else ''}: {cmd} "
+                        f"(exit {proc_result.returncode}): {stderr}"
+                    )
+                    # Failed command = return None
+                    return None
+
+                output = proc_result.stdout.strip()
+                if not output:
+                    logger.warning(
+                        f"Command produced no output{' for ' + context if context else ''}: {cmd}"
+                    )
+                    # Empty output = return None
+                    return None
+
+                # Replace this command substitution with its output
+                expanded_value = expanded_value.replace(f"$({cmd})", output)
+                logger.debug(
+                    f"Command output{' for ' + context if context else ''}: {output}"
+                )
+
+            except subprocess.TimeoutExpired:
+                logger.error(
+                    f"Command timeout ({self.command_timeout}s){' for ' + context if context else ''}: {cmd}"
+                )
+                return None
+            except Exception as e:
+                logger.error(
+                    f"Command execution error{' for ' + context if context else ''}: {cmd} - {e}"
+                )
+                return None
+
+        return expanded_value
+
+    def _expand_commands_recursive(self, data: Any, path: str = "") -> Any:
+        """
+        Recursively expand command substitutions in configuration data.
+
+        Args:
+            data: Configuration data (dict, list, or primitive)
+            path: Current path in config (for logging)
+
+        Returns:
+            Configuration data with commands expanded
+        """
+        if isinstance(data, dict):
+            result = {}
+            for key, value in data.items():
+                current_path = f"{path}.{key}" if path else key
+                expanded = self._expand_commands_recursive(value, current_path)
+                # Skip None values (failed commands)
+                if expanded is not None:
+                    result[key] = expanded
+                else:
+                    logger.debug(f"Skipping key '{current_path}' due to failed command")
+            return result
+        elif isinstance(data, list):
+            result = []
+            for i, item in enumerate(data):
+                current_path = f"{path}[{i}]"
+                expanded = self._expand_commands_recursive(item, current_path)
+                # Keep None in lists (user might want it)
+                result.append(expanded)
+            return result
+        elif isinstance(data, str):
+            return self._expand_value(data, path)
+        else:
+            # Other types (int, float, bool, None) pass through
+            return data
+
     def _apply_environment_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract and apply environment variables from config.
@@ -170,12 +290,17 @@ class ProfileConfigResolver:
             )
             return config_copy
 
-        # Apply environment variables
+        # Apply environment variables (already expanded by _expand_commands_recursive)
         for key, value in env_vars.items():
             if not isinstance(key, str):
                 logger.warning(
                     f"Environment variable key must be string, skipping: {key}"
                 )
+                continue
+
+            # None value means "not set" (from failed command or missing env var)
+            if value is None:
+                logger.debug(f"Skipping environment variable '{key}' (value is None)")
                 continue
 
             # Convert value to string
@@ -224,9 +349,11 @@ class ProfileConfigResolver:
         Resolution order:
         1. Discover configuration files (hierarchical search)
         2. Load and merge configuration files (most specific first)
-        3. Resolve profile with inheritance
-        4. Apply overrides in order (highest precedence)
-        5. Apply environment variables from config (if enabled)
+        3. Expand command substitutions in entire config
+        4. Resolve profile with inheritance
+        5. Apply overrides in order (highest precedence)
+        6. Apply variable interpolation (OmegaConf)
+        7. Apply environment variables from config (if enabled)
 
         Returns:
             Resolved configuration dictionary (without env_vars section)
@@ -261,19 +388,29 @@ class ProfileConfigResolver:
             enable_interpolation=False,  # Defer interpolation until after profile resolution
         )
 
-        # Step 4: Resolve profile
+        # Step 4: Expand command substitutions BEFORE profile resolution
+        # This allows $(command) to work in any configuration value
+        logger.debug("Expanding command substitutions in configuration")
+        merged_config = self._expand_commands_recursive(merged_config)
+
+        # Step 5: Resolve profile
         profile_config = self.profile_resolver.resolve_profile(
             merged_config,
             self.profile,
             self.profile_resolver.get_default_profile(merged_config),
         )
 
-        # Step 5: Apply overrides in order and final interpolation
+        # Step 6: Apply overrides in order and final interpolation
         if self.override_list:
+            # Expand commands in overrides too
+            expanded_overrides = [
+                self._expand_commands_recursive(override)
+                for override in self.override_list
+            ]
             # Apply each override in order (later overrides take precedence)
             final_config = self.merger.merge_configs(
                 profile_config,
-                *self.override_list,  # Unpack list to apply in order
+                *expanded_overrides,  # Unpack list to apply in order
                 enable_interpolation=self.enable_interpolation,
             )
             logger.debug(f"Applied {len(self.override_list)} override sources")
@@ -282,7 +419,7 @@ class ProfileConfigResolver:
                 profile_config, enable_interpolation=self.enable_interpolation
             )
 
-        # Step 6: Apply environment variables and remove from config
+        # Step 7: Apply environment variables and remove from config
         final_config = self._apply_environment_variables(final_config)
 
         logger.info(

@@ -3,6 +3,7 @@ Configuration merging with precedence handling.
 """
 
 import logging
+import os
 from typing import Any, Dict, List
 
 from omegaconf import DictConfig, OmegaConf
@@ -17,6 +18,18 @@ class ConfigMerger:
     Uses OmegaConf for robust merging and variable interpolation.
     Supports deep merging of nested dictionaries and variable substitution.
     """
+
+    def __init__(self):
+        """Initialize the config merger and register custom resolvers."""
+        self._register_resolvers()
+
+    def _register_resolvers(self):
+        """Register custom OmegaConf resolvers for environment variable access."""
+        # Register 'env' resolver for ${env:VAR_NAME} syntax
+        # Returns None if variable doesn't exist (will be converted to empty string)
+        if not OmegaConf.has_resolver("env"):
+            OmegaConf.register_new_resolver("env", lambda name: os.environ.get(name))
+            logger.debug("Registered 'env' resolver for ${env:VAR_NAME} syntax")
 
     def merge_configs(
         self, *config_sources: Dict[str, Any], enable_interpolation: bool = True
