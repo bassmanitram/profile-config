@@ -2,6 +2,22 @@
 
 Thank you for your interest in contributing to Profile Config! This document provides guidelines and information for contributors.
 
+## Project Overview
+
+### For AI Agents and Automated Tools
+
+If you're an AI agent or automated development tool working on this project, please read **AGENT_BOOTSTRAP.md** first. This document provides:
+
+- Complete project architecture and component overview
+- Detailed module responsibilities and data flow
+- Testing strategy and coverage requirements (98% maintained)
+- CI/CD pipeline documentation
+- Code quality standards and formatting rules
+- Quick reference commands for common tasks
+- Known issues and important notes for modifications
+
+The bootstrap document is designed to give automated tools comprehensive project context in a single reference, enabling more effective contributions while maintaining project standards.
+
 ## Development Setup
 
 ### Prerequisites
