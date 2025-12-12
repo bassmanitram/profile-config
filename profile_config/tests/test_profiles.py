@@ -230,3 +230,131 @@ class TestProfileResolver:
         default = resolver.get_default_profile(config_data)
 
         assert default == "default"
+
+    # BUGFIX TESTS: Deep merge for nested dicts in profile inheritance
+
+    def test_resolve_nested_dict_deep_merge_with_defaults(self):
+        """Test that nested dicts are deep merged with defaults, not shallow replaced."""
+        config_data = {
+            "defaults": {
+                "database": {
+                    "host": "localhost",
+                    "port": 5432,
+                    "options": {"timeout": 30, "pool_size": 10},
+                }
+            },
+            "profiles": {
+                "prod": {
+                    "database": {
+                        "host": "prod.example.com",
+                        "options": {"timeout": 60},  # Should merge, not replace
+                    }
+                }
+            },
+        }
+
+        resolver = ProfileResolver()
+        result = resolver.resolve_profile(config_data, "prod")
+
+        # With deep merge, nested values should be preserved
+        expected = {
+            "database": {
+                "host": "prod.example.com",  # Overridden
+                "port": 5432,  # Preserved from defaults
+                "options": {
+                    "timeout": 60,  # Overridden
+                    "pool_size": 10,  # Preserved from defaults
+                },
+            }
+        }
+        assert result == expected
+
+    def test_resolve_nested_dict_deep_merge_with_inheritance(self):
+        """Test that nested dicts are deep merged in profile inheritance chain."""
+        config_data = {
+            "profiles": {
+                "base": {
+                    "server": {
+                        "host": "0.0.0.0",
+                        "port": 8000,
+                        "ssl": {"enabled": False, "cert": None},
+                    }
+                },
+                "prod": {
+                    "inherits": "base",
+                    "server": {
+                        "host": "prod.example.com",
+                        "ssl": {"enabled": True},  # Should merge, not replace
+                    },
+                },
+            }
+        }
+
+        resolver = ProfileResolver()
+        result = resolver.resolve_profile(config_data, "prod")
+
+        # With deep merge, nested values should be preserved
+        expected = {
+            "server": {
+                "host": "prod.example.com",  # Overridden
+                "port": 8000,  # Preserved from base
+                "ssl": {
+                    "enabled": True,  # Overridden
+                    "cert": None,  # Preserved from base
+                },
+            }
+        }
+        assert result == expected
+
+    def test_resolve_nested_dict_multi_level_deep_merge(self):
+        """Test deep merge across multiple inheritance levels."""
+        config_data = {
+            "defaults": {
+                "config": {"level0": "default", "nested": {"level0": "default"}}
+            },
+            "profiles": {
+                "base": {"config": {"level1": "base", "nested": {"level1": "base"}}},
+                "staging": {
+                    "inherits": "base",
+                    "config": {"level2": "staging", "nested": {"level2": "staging"}},
+                },
+                "prod": {
+                    "inherits": "staging",
+                    "config": {"level3": "prod", "nested": {"level3": "prod"}},
+                },
+            },
+        }
+
+        resolver = ProfileResolver()
+        result = resolver.resolve_profile(config_data, "prod")
+
+        # All levels should be merged, not replaced
+        expected = {
+            "config": {
+                "level0": "default",
+                "level1": "base",
+                "level2": "staging",
+                "level3": "prod",
+                "nested": {
+                    "level0": "default",
+                    "level1": "base",
+                    "level2": "staging",
+                    "level3": "prod",
+                },
+            }
+        }
+        assert result == expected
+
+    def test_resolve_nested_list_replacement(self):
+        """Test that lists are replaced, not merged (expected behavior)."""
+        config_data = {
+            "defaults": {"items": [1, 2, 3]},
+            "profiles": {"dev": {"items": [4, 5]}},
+        }
+
+        resolver = ProfileResolver()
+        result = resolver.resolve_profile(config_data, "dev")
+
+        # Lists should be replaced, not merged
+        expected = {"items": [4, 5]}
+        assert result == expected

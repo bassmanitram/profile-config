@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2024-12-12
+
+### Fixed
+- **Deep Merge for Nested Dictionaries**: Fixed bug where nested dictionaries in profile inheritance and defaults merging were being shallow-replaced instead of deep-merged
+  - Profile inheritance now correctly preserves nested values from parent profiles
+  - Defaults merging now correctly preserves nested values when profiles override
+  - Uses `ConfigMerger.merge_configs()` for proper OmegaConf-based deep merging
+  - Fixes issue where partial nested dict updates would lose sibling keys
+
+### Changed
+- Modified `ProfileResolver._resolve_inheritance_chain()` to use deep merge for parent profile merging
+- Modified `ProfileResolver.resolve_profile()` to use deep merge for defaults merging
+
+### Technical Details
+- Modified `profile_config/profiles.py`:
+  - Added `ConfigMerger` instance to `ProfileResolver.__init__()`
+  - Replaced `.update()` calls with `ConfigMerger.merge_configs()`
+  - Two merge locations updated: defaults merge and inheritance chain merge
+- Added 4 comprehensive test cases in `profile_config/tests/test_profiles.py`:
+  - `test_resolve_nested_dict_deep_merge_with_defaults`
+  - `test_resolve_nested_dict_deep_merge_with_inheritance`
+  - `test_resolve_nested_dict_multi_level_deep_merge`
+  - `test_resolve_nested_list_replacement`
+- Test coverage maintained at 98%
+- Total tests increased from 110 to 114
+
+### Example
+
+**Before (Bug)**:
+```yaml
+defaults:
+  database:
+    host: localhost
+    port: 5432
+    options:
+      timeout: 30
+      pool_size: 10
+
+profiles:
+  prod:
+    database:
+      host: prod.example.com
+      options:
+        timeout: 60  # This would replace entire 'options' dict
+```
+
+Result (incorrect): `pool_size` was lost
+
+**After (Fixed)**:
+Result (correct): All keys preserved, only `host` and `timeout` overridden
+
+### Backward Compatibility
+- 100% backward compatible
+- Fixes incorrect behavior to match expected deep merge semantics
+- No configuration changes required
+
 ## [1.3.1] - 2024-12-04
 
 ### Added
@@ -15,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented via custom OmegaConf resolver
   - Works in defaults, profiles, nested structures, lists, and env_vars section
   - Combines seamlessly with existing `${...}` interpolation syntax
-  
+
 - **Global Command Execution**: `$(command)` syntax now works in ANY configuration value
   - Execute shell commands at configuration evaluation time
   - Syntax: `$(echo value)`, `$(hostname)`, `$(git rev-parse HEAD)`, `$(basename ${PWD})`, etc.
@@ -68,12 +124,12 @@ defaults:
   app_name: myapp
   environment: "$(echo production)"
   deployment_id: "${app_name}_${environment}_$(git rev-parse --short HEAD)"
-  
+
   database:
     host: "db.$(hostname)"
     name: "$(basename ${PWD})_db"
     user: "${env:USER}"
-  
+
   servers:
     - "web1.$(hostname)"
     - "web2.$(hostname)"
@@ -85,7 +141,7 @@ profiles:
   development:
     environment: "$(echo dev)"
     debug_host: "debug.$(hostname)"
-  
+
   production:
     environment: "$(echo prod)"
     server: "prod.$(hostname)"
@@ -118,116 +174,6 @@ profiles:
 - 100% backward compatible
 - Only affects configurations using `${env:...}` or `$(...)` syntax
 - Existing configurations work unchanged
-- No migration required
-
-## [1.3.0] - 2025-11-13
-
-## [1.3.1] - 2024-12-04
-
-### Added
-- **Global Environment Variable Expansion**: `${env:VAR_NAME}` syntax now works in ANY configuration value
-  - Read existing environment variables at configuration evaluation time
-  - Syntax: `${env:HOME}`, `${env:USER}`, `${env:PATH}`, etc.
-  - Missing variables return `None`/empty string (treated as "not set")
-  - Implemented via custom OmegaConf resolver
-  - Works in defaults, profiles, nested structures, lists, and env_vars section
-  - Combines seamlessly with existing `${...}` interpolation syntax
-  
-- **Global Command Execution**: `$(command)` syntax now works in ANY configuration value
-  - Execute shell commands at configuration evaluation time
-  - Syntax: `$(echo value)`, `$(hostname)`, `$(git rev-parse HEAD)`, `$(basename ${PWD})`, etc.
-  - Full shell expansion: can use `$VAR`, `${VAR}`, pipes, and complex commands
-  - Failed commands (non-zero exit) result in `None` value → key omitted from configuration
-  - Empty command output results in `None` value → key omitted from configuration
-  - Timeout protection: commands must complete within `command_timeout` seconds (default: 2.0s)
-  - Comprehensive error logging via standard Python logging
-  - Commands execute with current `os.environ` (can access all environment variables)
-  - Works in defaults, profiles, nested structures, lists, and env_vars section
-  - New parameter: `command_timeout` (default: 2.0 seconds)
-
-- **20 new comprehensive tests** covering both features with 99% test coverage
-  - Environment variable expansion tests (4 tests)
-  - Command execution tests (8 tests)
-  - Combined feature tests (3 tests)
-  - Global expansion tests (6 tests): profiles, nesting, interpolation, error handling
-  - Platform-specific tests for Unix and Windows compatibility
-
-### Changed
-- Command expansion now happens **before** OmegaConf interpolation in resolution pipeline
-- Resolution order updated:
-  1. Discover and load config files
-  2. Merge config files
-  3. **→ Expand command substitutions globally** (NEW)
-  4. Resolve profile with inheritance
-  5. **→ Expand commands in overrides** (NEW)
-  6. Apply overrides and OmegaConf interpolation
-  7. Apply environment variables to `os.environ`
-- Test count increased from 90 to 110 tests
-- Coverage maintained at 98%
-
-### Security
-- Command execution introduces security risks if configuration files are untrusted
-- Commands run with `shell=True` enabling full shell features
-- Users are responsible for ensuring configuration files are from trusted sources
-- Timeout protection prevents runaway commands (default 2 seconds)
-- Failed commands logged but don't crash configuration resolution
-- All command executions logged at DEBUG level for audit trails
-
-### Examples
-
-**Environment Variable Expansion**:
-```yaml
-defaults:
-  user: "${env:USER}"
-  home: "${env:HOME}"
-  project_path: "${env:HOME}/projects/myapp"
-```
-
-**Command Execution**:
-```yaml
-defaults:
-  hostname: "$(hostname)"
-  git_commit: "$(git rev-parse HEAD)"
-  git_branch: "$(git branch --show-current)"
-  project_name: "$(basename ${PWD})"
-  build_date: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-```
-
-**Combined Usage**:
-```yaml
-defaults:
-  app_name: myapp
-  environment: "$(echo production)"
-  
-  # Combines all three: config vars, env expansion, and commands
-  deployment_id: "${app_name}_${environment}_$(git rev-parse --short HEAD)"
-  
-  database:
-    host: "db.$(hostname)"
-    name: "$(basename ${PWD})_db"
-    user: "${env:USER}"
-  
-  servers:
-    - "web1.$(hostname)"
-    - "web2.$(hostname)"
-```
-
-**In Profiles**:
-```yaml
-profiles:
-  development:
-    api_url: "http://localhost:8000"
-    log_level: "$(echo DEBUG)"
-  
-  production:
-    api_url: "https://api.$(hostname)"
-    log_level: "$(echo WARNING)"
-```
-
-### Backward Compatibility
-- 100% backward compatible
-- Existing configurations without `${env:...}` or `$(...)` syntax work unchanged
-- Only affects configurations that use the new syntax patterns
 - No migration required
 
 ## [1.3.0] - 2025-11-13

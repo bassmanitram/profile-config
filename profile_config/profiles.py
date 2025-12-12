@@ -6,6 +6,7 @@ import logging
 from typing import Any, Dict, List, Set
 
 from .exceptions import CircularInheritanceError, ProfileNotFoundError
+from .merger import ConfigMerger
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class ProfileResolver:
             inherit_key: Key name used for inheritance (default: "inherits")
         """
         self.inherit_key = inherit_key
+        self.merger = ConfigMerger()
 
     def resolve_profile(
         self,
@@ -89,9 +91,13 @@ class ProfileResolver:
         # Resolve inheritance chain
         resolved_config = self._resolve_inheritance_chain(profiles, profile_name, set())
 
-        # Merge with defaults (defaults have lowest precedence)
-        final_config = defaults.copy()
-        final_config.update(resolved_config)
+        # Merge with defaults using deep merge (defaults have lowest precedence)
+        # FIX: Use merger.merge_configs() for deep merge instead of shallow .update()
+        final_config = self.merger.merge_configs(
+            defaults,
+            resolved_config,
+            enable_interpolation=False,  # Interpolation happens later in resolver
+        )
 
         logger.debug(f"Resolved profile '{profile_name}' with {len(final_config)} keys")
         return final_config
@@ -136,9 +142,13 @@ class ProfileResolver:
                 profiles, parent_profile, visited.copy()
             )
 
-            # Merge parent config with current profile (current profile takes precedence)
-            merged_config = parent_config.copy()
-            merged_config.update(profile_config)
+            # Merge parent config with current profile using deep merge
+            # FIX: Use merger.merge_configs() for deep merge
+            merged_config = self.merger.merge_configs(
+                parent_config,
+                profile_config,
+                enable_interpolation=False,  # Interpolation happens later
+            )
             profile_config = merged_config
 
         visited.remove(profile_name)
