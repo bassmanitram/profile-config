@@ -1,8 +1,8 @@
 # profile-config - Agent Bootstrap
 
-**Purpose**: Manage hierarchical configuration files with profile-based inheritance and variable interpolation  
-**Type**: Library  
-**Language**: Python 3.8+  
+**Purpose**: Manage hierarchical configuration files with profile-based inheritance and variable interpolation
+**Type**: Library
+**Language**: Python 3.8+
 **Repository**: https://github.com/bassmanitram/profile-config
 
 ---
@@ -288,5 +288,5 @@ Don't update for:
 
 ---
 
-**Last Updated**: 2025-12-03  
+**Last Updated**: 2025-12-03
 **Last Architectural Change**: v1.3.0 - Added environment variable injection feature

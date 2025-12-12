@@ -116,7 +116,7 @@ class ProfileConfigResolver:
             override_list = overrides
 
         # Process each override source
-        processed = []
+        processed: List[Dict[str, Any]] = []
         for override_source in override_list:
             if isinstance(override_source, dict):
                 # Direct dictionary
@@ -235,7 +235,7 @@ class ProfileConfigResolver:
             Configuration data with commands expanded
         """
         if isinstance(data, dict):
-            result = {}
+            result: Dict[str, Any] = {}
             for key, value in data.items():
                 current_path = f"{path}.{key}" if path else key
                 expanded = self._expand_commands_recursive(value, current_path)
@@ -246,13 +246,13 @@ class ProfileConfigResolver:
                     logger.debug(f"Skipping key '{current_path}' due to failed command")
             return result
         elif isinstance(data, list):
-            result = []
+            result_list: List[Any] = []
             for i, item in enumerate(data):
                 current_path = f"{path}[{i}]"
                 expanded = self._expand_commands_recursive(item, current_path)
                 # Keep None in lists (user might want it)
-                result.append(expanded)
-            return result
+                result_list.append(expanded)
+            return result_list
         elif isinstance(data, str):
             return self._expand_value(data, path)
         else:
@@ -369,7 +369,7 @@ class ProfileConfigResolver:
         logger.info(f"Found {len(config_files)} configuration files")
 
         # Step 2: Load configuration files
-        config_data_list = []
+        config_data_list: List[Dict[str, Any]] = []
         for config_file in reversed(config_files):  # Reverse for precedence order
             try:
                 config_data = self.loader.load_config_file(config_file)
@@ -440,7 +440,7 @@ class ProfileConfigResolver:
             return []
 
         # Load and merge all config files to get complete profile list
-        config_data_list = []
+        config_data_list: List[Dict[str, Any]] = []
         for config_file in config_files:
             try:
                 config_data = self.loader.load_config_file(config_file)
