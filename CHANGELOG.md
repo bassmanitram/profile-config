@@ -13,16 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Defaults merging now correctly preserves nested values when profiles override
   - Uses `ConfigMerger.merge_configs()` for proper OmegaConf-based deep merging
   - Fixes issue where partial nested dict updates would lose sibling keys
+  - **Critical fix**: `env_vars` section in defaults now correctly merges with profile-specific `env_vars` instead of being replaced
+- **GitHub Actions**: Fixed status workflow missing `twine` installation
+- **Build Warnings**: Resolved setuptools deprecation warnings for license configuration
+  - Changed `license = {text = "MIT"}` to `license = "MIT"` (SPDX format)
+  - Removed deprecated license classifier
 
 ### Changed
 - Modified `ProfileResolver._resolve_inheritance_chain()` to use deep merge for parent profile merging
 - Modified `ProfileResolver.resolve_profile()` to use deep merge for defaults merging
+- Updated `pyproject.toml` license field to use modern SPDX format
+- Updated `.github/workflows/status.yml` to install build dependencies
 
 ### Technical Details
 - Modified `profile_config/profiles.py`:
   - Added `ConfigMerger` instance to `ProfileResolver.__init__()`
   - Replaced `.update()` calls with `ConfigMerger.merge_configs()`
   - Two merge locations updated: defaults merge and inheritance chain merge
+- Modified `profile_config/resolver.py`:
+  - Added explicit type annotations to fix mypy errors in `_expand_commands_recursive()`
+  - Fixed `List[Dict[str, Any]]` type hints for `processed` and `config_data_list` variables
 - Added 4 comprehensive test cases in `profile_config/tests/test_profiles.py`:
   - `test_resolve_nested_dict_deep_merge_with_defaults`
   - `test_resolve_nested_dict_deep_merge_with_inheritance`
@@ -42,6 +52,9 @@ defaults:
     options:
       timeout: 30
       pool_size: 10
+  env_vars:
+    DEFAULT_VAR: "from_defaults"
+    SHARED: "defaults_value"
 
 profiles:
   prod:
@@ -49,12 +62,15 @@ profiles:
       host: prod.example.com
       options:
         timeout: 60  # This would replace entire 'options' dict
+    env_vars:
+      PROFILE_VAR: "from_profile"
+      SHARED: "prod_value"  # This would replace entire 'env_vars' dict
 ```
 
-Result (incorrect): `pool_size` was lost
+Result (incorrect): `pool_size` was lost, `DEFAULT_VAR` was lost
 
 **After (Fixed)**:
-Result (correct): All keys preserved, only `host` and `timeout` overridden
+Result (correct): All keys preserved, only `host`, `timeout`, and `SHARED` overridden, `DEFAULT_VAR` and `PROFILE_VAR` both present
 
 ### Backward Compatibility
 - 100% backward compatible
