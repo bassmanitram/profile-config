@@ -15,14 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixes issue where partial nested dict updates would lose sibling keys
   - **Critical fix**: `env_vars` section in defaults now correctly merges with profile-specific `env_vars` instead of being replaced
 - **GitHub Actions**: Fixed status workflow missing `twine` installation
-- **Build Warnings**: Resolved setuptools deprecation warnings for license configuration
-  - Changed `license = {text = "MIT"}` to `license = "MIT"` (SPDX format)
-  - Removed deprecated license classifier
+- **Python 3.8 Compatibility**: Restored `license = {text = "MIT"}` format for compatibility with older setuptools
+  - Modern setuptools (77.0+) deprecates this format but it still works
+  - Required for Python 3.8 support which has older setuptools
 
 ### Changed
 - Modified `ProfileResolver._resolve_inheritance_chain()` to use deep merge for parent profile merging
 - Modified `ProfileResolver.resolve_profile()` to use deep merge for defaults merging
-- Updated `pyproject.toml` license field to use modern SPDX format
 - Updated `.github/workflows/status.yml` to install build dependencies
 
 ### Technical Details
