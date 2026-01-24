@@ -36,8 +36,7 @@ class TestFlexibleOverrides:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   port: 3000
   debug: false
@@ -45,18 +44,15 @@ defaults:
 profiles:
   dev:
     host: localhost
-"""
-            )
+""")
 
             # Create override file
             override_file = Path(tmpdir) / "overrides.yaml"
-            override_file.write_text(
-                """
+            override_file.write_text("""
 port: 8080
 debug: true
 extra: from_file
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver(
                 "myapp", profile="dev", overrides=str(override_file), search_home=False
@@ -76,16 +72,14 @@ extra: from_file
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   port: 3000
 
 profiles:
   dev:
     host: localhost
-"""
-            )
+""")
 
             # Create JSON override file
             override_file = Path(tmpdir) / "overrides.json"
@@ -108,13 +102,11 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     port: 3000
-"""
-            )
+""")
 
             # Create override file
             override_file = Path(tmpdir) / "overrides.yaml"
@@ -138,15 +130,13 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     port: 3000
     host: localhost
     debug: false
-"""
-            )
+""")
 
             overrides = [{"port": 8080}, {"debug": True}, {"port": 9000}]  # Should win
 
@@ -167,14 +157,12 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     port: 3000
     host: localhost
-"""
-            )
+""")
 
             # Create override files
             override1 = Path(tmpdir) / "override1.yaml"
@@ -208,16 +196,14 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     value: base
     a: 1
     b: 2
     c: 3
-"""
-            )
+""")
 
             overrides = [
                 {"value": "first", "a": 10},
@@ -319,13 +305,11 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     port: 3000
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver(
                 "myapp", profile="dev", overrides=[], search_home=False  # Empty list
@@ -342,13 +326,11 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     port: 3000
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver(
                 "myapp",
@@ -368,14 +350,12 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     base_path: /app
     data_path: ${base_path}/data
-"""
-            )
+""")
 
             overrides = [{"base_path": "/override"}]
 

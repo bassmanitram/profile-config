@@ -232,8 +232,7 @@ def main():
     print("=" * 70)
     print("Summary")
     print("=" * 70)
-    print(
-        """
+    print("""
 The 'default' profile provides flexible configuration:
 
 1. Auto-Creation: When no 'default' profile exists, it returns only
@@ -249,8 +248,7 @@ This makes it easy to:
 - Get base configuration without profile-specific overrides
 - Test applications with minimal configuration
 - Provide sensible defaults for local development
-"""
-    )
+""")
 
 
 if __name__ == "__main__":

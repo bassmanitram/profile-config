@@ -20,8 +20,7 @@ def main():
         config_dir = Path(tmpdir) / "myapp"
         config_dir.mkdir()
         config_file = config_dir / "config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   app_name: myapp
   database:
@@ -51,8 +50,7 @@ profiles:
     env_vars:
       LOG_LEVEL: "WARNING"
       ENVIRONMENT: "production"
-"""
-        )
+""")
 
         # Change to tmpdir so the resolver can find our config
         original_cwd = os.getcwd()

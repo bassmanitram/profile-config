@@ -181,8 +181,7 @@ def demonstrate_hierarchical_discovery():
             base_config_dir = base_dir / "myapp"
             base_config_dir.mkdir()
             base_config = base_config_dir / "config.yaml"
-            base_config.write_text(
-                """
+            base_config.write_text("""
 defaults:
   level: base
   timeout: 30
@@ -190,15 +189,13 @@ defaults:
 profiles:
   dev:
     debug: true
-"""
-            )
+""")
 
             # Create project-level configuration
             project_config_dir = project_dir / "myapp"
             project_config_dir.mkdir()
             project_config = project_config_dir / "config.yaml"
-            project_config.write_text(
-                """
+            project_config.write_text("""
 defaults:
   level: project
   port: 8080
@@ -207,8 +204,7 @@ profiles:
   dev:
     debug: false
     custom_setting: project_value
-"""
-            )
+""")
 
             # Change to subdirectory
             os.chdir(sub_dir)

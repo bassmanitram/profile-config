@@ -61,8 +61,7 @@ class TestProfileConfigResolver:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   database: sqlite:///default.db
   debug: false
@@ -71,8 +70,7 @@ profiles:
   dev:
     debug: true
     database: sqlite:///dev.db
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", profile="dev", search_home=False)
             result = resolver.resolve()
@@ -88,8 +86,7 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   timeout: 30
 
@@ -102,8 +99,7 @@ profiles:
     inherits: base
     debug: true
     port: 3000
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", profile="dev", search_home=False)
             result = resolver.resolve()
@@ -124,8 +120,7 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   database: sqlite:///default.db
   port: 8000
@@ -133,8 +128,7 @@ defaults:
 profiles:
   dev:
     debug: true
-"""
-            )
+""")
 
             overrides = {
                 "database": "postgresql://localhost/override",
@@ -162,8 +156,7 @@ profiles:
             parent_config_dir = Path(tmpdir) / "myapp"
             parent_config_dir.mkdir()
             parent_config = parent_config_dir / "config.yaml"
-            parent_config.write_text(
-                """
+            parent_config.write_text("""
 defaults:
   database: sqlite:///parent.db
   timeout: 30
@@ -171,8 +164,7 @@ defaults:
 profiles:
   dev:
     debug: false
-"""
-            )
+""")
 
             # Create more specific config in subdirectory
             sub_dir = Path(tmpdir) / "project"
@@ -180,8 +172,7 @@ profiles:
             sub_config_dir = sub_dir / "myapp"
             sub_config_dir.mkdir()
             sub_config = sub_config_dir / "config.yaml"
-            sub_config.write_text(
-                """
+            sub_config.write_text("""
 defaults:
   database: sqlite:///project.db
 
@@ -189,8 +180,7 @@ profiles:
   dev:
     debug: true
     port: 3000
-"""
-            )
+""")
 
             # Change to subdirectory
             os.chdir(sub_dir)
@@ -214,8 +204,7 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   base_path: /app
   data_path: ${base_path}/data
@@ -224,8 +213,7 @@ defaults:
 profiles:
   dev:
     base_path: /dev/app
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", profile="dev", search_home=False)
             result = resolver.resolve()
@@ -245,13 +233,11 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   base_path: /app
   data_path: ${base_path}/data
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver(
                 "myapp", search_home=False, enable_interpolation=False
@@ -272,13 +258,11 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     debug: true
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver(
                 "myapp", profile="nonexistent", search_home=False
@@ -304,8 +288,7 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 profiles:
   dev:
     debug: true
@@ -313,8 +296,7 @@ profiles:
     debug: false
   prod:
     debug: false
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             profiles = resolver.list_profiles()
@@ -364,8 +346,7 @@ profiles:
             config_file = config_dir / "config.yaml"
 
             # Config WITHOUT a "default" profile
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   host: localhost
   port: 5432
@@ -379,8 +360,7 @@ profiles:
   production:
     host: prod-db.com
     debug: false
-"""
-            )
+""")
 
             # Should work and return only defaults
             resolver = ProfileConfigResolver(
@@ -398,8 +378,7 @@ profiles:
             config_file = config_dir / "config.yaml"
 
             # Config WITH an explicit "default" profile
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   host: localhost
   port: 5432
@@ -412,8 +391,7 @@ profiles:
 
   development:
     debug: true
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver(
                 "testapp", profile="default", search_home=False
@@ -435,16 +413,14 @@ profiles:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   host: localhost
 
 profiles:
   development:
     debug: true
-"""
-            )
+""")
 
             # Non-existent profile should still raise error
             resolver = ProfileConfigResolver(

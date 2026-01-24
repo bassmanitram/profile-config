@@ -33,15 +33,13 @@ class TestEnvironmentVariables:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   database: testdb
   env_vars:
     TEST_VAR_1: "value1"
     TEST_VAR_2: "value2"
-"""
-            )
+""")
 
             # Clear any existing test variables
             os.environ.pop("TEST_VAR_1", None)
@@ -76,16 +74,14 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   app_name: myapp
   base_path: /opt/apps
   env_vars:
     APP_NAME: "${app_name}"
     APP_PATH: "${base_path}/${app_name}"
-"""
-            )
+""")
 
             os.environ.pop("APP_NAME", None)
             os.environ.pop("APP_PATH", None)
@@ -108,8 +104,7 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     LOG_LEVEL: "INFO"
@@ -120,8 +115,7 @@ profiles:
     env_vars:
       LOG_LEVEL: "WARNING"
       APP_ENV: "production"
-"""
-            )
+""")
 
             os.environ.pop("LOG_LEVEL", None)
             os.environ.pop("APP_ENV", None)
@@ -146,14 +140,12 @@ profiles:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     EXISTING_VAR: "from_config"
     NEW_VAR: "from_config"
-"""
-            )
+""")
 
             # Set existing variable
             os.environ["EXISTING_VAR"] = "from_environment"
@@ -188,13 +180,11 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     EXISTING_VAR: "from_config"
-"""
-            )
+""")
 
             # Set existing variable
             os.environ["EXISTING_VAR"] = "from_environment"
@@ -222,13 +212,11 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     SHOULD_NOT_BE_SET: "value"
-"""
-            )
+""")
 
             os.environ.pop("SHOULD_NOT_BE_SET", None)
 
@@ -253,13 +241,11 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   exports:
     CUSTOM_VAR: "custom_value"
-"""
-            )
+""")
 
             os.environ.pop("CUSTOM_VAR", None)
 
@@ -283,14 +269,12 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   base_url: "http://localhost"
   env_vars:
     BASE_URL: "${base_url}"
-"""
-            )
+""")
 
             os.environ.pop("BASE_URL", None)
 
@@ -314,15 +298,13 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     PORT: 8080
     DEBUG: true
     RATIO: 3.14
-"""
-            )
+""")
 
             os.environ.pop("PORT", None)
             os.environ.pop("DEBUG", None)
@@ -348,13 +330,11 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   database: testdb
   env_vars: {}
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()
@@ -369,12 +349,10 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   database: testdb
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()
@@ -391,13 +369,11 @@ defaults:
             config_dir = Path(tmpdir) / "myapp"
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   database: testdb
   env_vars: "not_a_dict"
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
 

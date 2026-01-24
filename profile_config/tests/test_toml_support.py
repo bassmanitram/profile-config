@@ -22,8 +22,7 @@ class TestTOMLSupport:
         """Test loading a simple TOML configuration file."""
         # Create TOML config file
         config_file = tmp_path / "config.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [defaults]
 database_host = "localhost"
 database_port = 5432
@@ -32,8 +31,7 @@ debug = false
 [profiles.development]
 debug = true
 database_name = "myapp_dev"
-"""
-        )
+""")
 
         loader = ConfigLoader()
         config = loader.load_config_file(config_file)
@@ -52,8 +50,7 @@ database_name = "myapp_dev"
         """Test TOML with complex data types."""
         # Create TOML config with arrays, nested tables, etc.
         config_file = tmp_path / "config.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [defaults]
 name = "myapp"
 version = "1.0.0"
@@ -80,8 +77,7 @@ ip = "192.168.1.2"
 [profiles.development.database]
 host = "dev-db"
 port = 5433
-"""
-        )
+""")
 
         loader = ConfigLoader()
         config = loader.load_config_file(config_file)
@@ -98,12 +94,10 @@ port = 5433
         """Test TOML error handling for invalid files."""
         # Create invalid TOML file
         config_file = tmp_path / "config.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [defaults
 invalid_toml = "missing closing bracket"
-"""
-        )
+""")
 
         loader = ConfigLoader()
 
@@ -129,12 +123,10 @@ invalid_toml = "missing closing bracket"
         monkeypatch.setattr(profile_config.loader, "HAS_TOML", False)
 
         config_file = tmp_path / "config.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [defaults]
 test = "value"
-"""
-        )
+""")
 
         loader = ConfigLoader()
 

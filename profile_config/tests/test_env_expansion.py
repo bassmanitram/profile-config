@@ -37,13 +37,11 @@ class TestEnvironmentVariableExpansion:
             # Set up test environment variable
             os.environ["TEST_EXISTING_VAR"] = "existing_value"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     READ_FROM_ENV: "${env:TEST_EXISTING_VAR}"
-"""
-            )
+""")
 
             os.environ.pop("READ_FROM_ENV", None)
 
@@ -68,13 +66,11 @@ defaults:
             # Ensure variable doesn't exist
             os.environ.pop("NONEXISTENT_VAR", None)
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     FROM_MISSING: "${env:NONEXISTENT_VAR}"
-"""
-            )
+""")
 
             os.environ.pop("FROM_MISSING", None)
 
@@ -99,14 +95,12 @@ defaults:
 
             os.environ["USER_HOME"] = "/home/testuser"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   app_name: myapp
   env_vars:
     APP_PATH: "${env:USER_HOME}/${app_name}"
-"""
-            )
+""")
 
             os.environ.pop("APP_PATH", None)
 
@@ -132,15 +126,13 @@ defaults:
             os.environ["VAR2"] = "value2"
             os.environ["VAR3"] = "value3"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     COPY1: "${env:VAR1}"
     COPY2: "${env:VAR2}"
     COPY3: "${env:VAR3}"
-"""
-            )
+""")
 
             os.environ.pop("COPY1", None)
             os.environ.pop("COPY2", None)
@@ -169,13 +161,11 @@ class TestCommandExecution:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     CMD_OUTPUT: "$(echo test_value)"
-"""
-            )
+""")
 
             os.environ.pop("CMD_OUTPUT", None)
 
@@ -204,13 +194,11 @@ defaults:
             else:
                 cmd = "$(echo $TEST_VAR)"
 
-            config_file.write_text(
-                f"""
+            config_file.write_text(f"""
 defaults:
   env_vars:
     EXPANDED_CMD: "{cmd}"
-"""
-            )
+""")
 
             os.environ.pop("EXPANDED_CMD", None)
 
@@ -232,15 +220,13 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   other_var: "should_be_set"
   env_vars:
     FAILED_CMD: "$(nonexistent_command_xyz)"
     GOOD_VAR: "normal_value"
-"""
-            )
+""")
 
             os.environ.pop("FAILED_CMD", None)
             os.environ.pop("GOOD_VAR", None)
@@ -273,14 +259,12 @@ defaults:
             else:
                 empty_cmd = "$(true)"  # Unix command with no output
 
-            config_file.write_text(
-                f"""
+            config_file.write_text(f"""
 defaults:
   env_vars:
     EMPTY_CMD: "{empty_cmd}"
     GOOD_VAR: "normal_value"
-"""
-            )
+""")
 
             os.environ.pop("EMPTY_CMD", None)
             os.environ.pop("GOOD_VAR", None)
@@ -309,14 +293,12 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     TIMEOUT_CMD: "$(sleep 10 && echo done)"
     GOOD_VAR: "normal_value"
-"""
-            )
+""")
 
             os.environ.pop("TIMEOUT_CMD", None)
             os.environ.pop("GOOD_VAR", None)
@@ -346,15 +328,13 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     CMD1: "$(echo value1)"
     CMD2: "$(echo value2)"
     CMD3: "$(echo value3)"
-"""
-            )
+""")
 
             for var in ["CMD1", "CMD2", "CMD3"]:
                 os.environ.pop(var, None)
@@ -379,13 +359,11 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     PIPED_CMD: "$(echo 'hello world' | tr ' ' '_')"
-"""
-            )
+""")
 
             os.environ.pop("PIPED_CMD", None)
 
@@ -411,15 +389,13 @@ class TestCombinedFeatures:
 
             os.environ["EXISTING_VAR"] = "existing_value"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     FROM_ENV: "${env:EXISTING_VAR}"
     FROM_CMD: "$(echo command_value)"
     COMBINED: "${env:EXISTING_VAR}_$(echo suffix)"
-"""
-            )
+""")
 
             for var in ["FROM_ENV", "FROM_CMD", "COMBINED"]:
                 os.environ.pop(var, None)
@@ -452,13 +428,11 @@ defaults:
             else:
                 cmd = "$(echo ${BASE_VALUE}_extended)"
 
-            config_file.write_text(
-                f"""
+            config_file.write_text(f"""
 defaults:
   env_vars:
     RESULT: "{cmd}"
-"""
-            )
+""")
 
             os.environ.pop("RESULT", None)
 
@@ -482,8 +456,7 @@ defaults:
 
             os.environ["PROFILE_VAR"] = "production"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   env_vars:
     ENV_TYPE: "${env:PROFILE_VAR}"
@@ -493,8 +466,7 @@ profiles:
     env_vars:
       ENV_TYPE: "${env:PROFILE_VAR}_override"
       BUILD_ID: "$(echo build_123)"
-"""
-            )
+""")
 
             for var in ["ENV_TYPE", "BUILD_ID"]:
                 os.environ.pop(var, None)
@@ -528,8 +500,7 @@ class TestGlobalCommandExpansion:
 
             os.environ["TEST_USER"] = "testuser"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   project_name: "$(echo myproject)"
   user: "${env:TEST_USER}"
@@ -539,8 +510,7 @@ defaults:
   servers:
     - "server1.$(hostname)"
     - "server2.$(hostname)"
-"""
-            )
+""")
 
             try:
                 resolver = ProfileConfigResolver("myapp", search_home=False)
@@ -568,13 +538,11 @@ defaults:
             # Get the expected basename
             expected_basename = Path(tmpdir).name
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   current_dir: "$(basename ${PWD})"
   username: "${env:USER}"
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()
@@ -591,8 +559,7 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   environment: "$(echo base)"
 
@@ -604,8 +571,7 @@ profiles:
   production:
     environment: "$(echo prod)"
     debug: false
-"""
-            )
+""")
 
             # Test development profile
             resolver = ProfileConfigResolver(
@@ -630,15 +596,13 @@ profiles:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   app_name: myapp
   environment: "$(echo production)"
   full_name: "${app_name}_${environment}"
   database_url: "postgresql://localhost/${app_name}_$(echo db)"
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()
@@ -655,14 +619,12 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   good_value: "static"
   bad_value: "$(nonexistent_command_xyz)"
   another_good: "also_static"
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()
@@ -681,8 +643,7 @@ defaults:
             config_dir.mkdir()
             config_file = config_dir / "config.yaml"
 
-            config_file.write_text(
-                """
+            config_file.write_text("""
 defaults:
   level1:
     level2:
@@ -690,8 +651,7 @@ defaults:
         value: "$(echo deeply_nested)"
       another: "$(echo level2_value)"
     simple: "$(echo level1_value)"
-"""
-            )
+""")
 
             resolver = ProfileConfigResolver("myapp", search_home=False)
             config = resolver.resolve()

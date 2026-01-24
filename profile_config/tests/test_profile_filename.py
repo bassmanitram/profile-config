@@ -20,8 +20,7 @@ class TestProfileFilename:
         config_dir.mkdir()
 
         config_file = config_dir / "config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   value: 100
   name: default_test
@@ -29,8 +28,7 @@ defaults:
 profiles:
   dev:
     debug: true
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver("myapp", profile="dev")
@@ -47,8 +45,7 @@ profiles:
 
         # Create settings.yaml instead of config.yaml
         config_file = config_dir / "settings.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   value: 42
   source: settings
@@ -57,8 +54,7 @@ profiles:
   dev:
     debug: true
     log_level: DEBUG
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
@@ -78,8 +74,7 @@ profiles:
 
         # Create app.json
         config_file = config_dir / "app.json"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 {
   "defaults": {
     "type": "json",
@@ -92,8 +87,7 @@ profiles:
     }
   }
 }
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
@@ -112,8 +106,7 @@ profiles:
 
         # Create database.toml
         config_file = config_dir / "database.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [defaults]
 host = "localhost"
 port = 5432
@@ -121,8 +114,7 @@ port = 5432
 [profiles.production]
 host = "prod-db.example.com"
 pool_size = 20
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
@@ -141,13 +133,11 @@ pool_size = 20
 
         # Create only .yml version (not .yaml)
         config_file = config_dir / "settings.yml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   found: true
   extension: yml
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver("myapp", profile_filename="settings")
@@ -163,25 +153,21 @@ defaults:
 
         # Create both .yaml and .json with different values
         yaml_file = config_dir / "settings.yaml"
-        yaml_file.write_text(
-            """
+        yaml_file.write_text("""
 defaults:
   source: yaml
   value: 100
-"""
-        )
+""")
 
         json_file = config_dir / "settings.json"
-        json_file.write_text(
-            """
+        json_file.write_text("""
 {
   "defaults": {
     "source": "json",
     "value": 200
   }
 }
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver("myapp", profile_filename="settings")
@@ -196,25 +182,21 @@ defaults:
         # Create nested directory structure
         parent_config = tmp_path / "myapp"
         parent_config.mkdir()
-        (parent_config / "app.yaml").write_text(
-            """
+        (parent_config / "app.yaml").write_text("""
 defaults:
   level: parent
   timeout: 30
-"""
-        )
+""")
 
         child_dir = tmp_path / "subdir"
         child_dir.mkdir()
         child_config = child_dir / "myapp"
         child_config.mkdir()
-        (child_config / "app.yaml").write_text(
-            """
+        (child_config / "app.yaml").write_text("""
 defaults:
   level: child
   retries: 3
-"""
-        )
+""")
 
         os.chdir(child_dir)
         resolver = ProfileConfigResolver("myapp", profile_filename="app")
@@ -250,13 +232,11 @@ defaults:
         config_dir.mkdir()
 
         config_file = config_dir / "settings.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   value: 100
   debug: false
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
@@ -275,8 +255,7 @@ defaults:
         config_dir.mkdir()
 
         config_file = config_dir / "app.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 profiles:
   base:
     timeout: 30
@@ -290,8 +269,7 @@ profiles:
   staging:
     inherits: dev
     debug: false
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
@@ -309,8 +287,7 @@ profiles:
         config_dir.mkdir()
 
         config_file = config_dir / "settings.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   app_name: myapp
   base_path: /opt/${app_name}
@@ -319,8 +296,7 @@ defaults:
 profiles:
   dev:
     base_path: /tmp/${app_name}
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
@@ -338,8 +314,7 @@ profiles:
         config_dir.mkdir()
 
         config_file = config_dir / "app.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 profiles:
   development:
     debug: true
@@ -347,8 +322,7 @@ profiles:
     debug: false
   production:
     debug: false
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver("myapp", profile_filename="app")
@@ -378,12 +352,10 @@ profiles:
         config_dir.mkdir()
 
         config_file = config_dir / "app.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 defaults:
   value: 42
-"""
-        )
+""")
 
         os.chdir(tmp_path)
         resolver = ProfileConfigResolver(
