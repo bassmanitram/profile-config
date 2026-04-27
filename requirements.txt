@@ -16,7 +16,7 @@ build>=0.8.0
 
 # Security and quality tools
 bandit[toml]>=1.7.0
-safety>=2.0.0
+safety>=3.7.0
 
 # Documentation tools
 sphinx>=4.0.0
