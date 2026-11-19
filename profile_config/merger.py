@@ -28,7 +28,7 @@ class ConfigMerger:
         # Register 'env' resolver for ${env:VAR_NAME} syntax
         # Returns None if variable doesn't exist (will be converted to empty string)
         if not OmegaConf.has_resolver("env"):
-            OmegaConf.register_new_resolver("env", lambda name: os.environ.get(name))
+            OmegaConf.register_resolver("env", lambda name: os.environ.get(name))
             logger.debug("Registered 'env' resolver for ${env:VAR_NAME} syntax")
 
     def merge_configs(

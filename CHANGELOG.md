@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.4.0] - 2026-11-19
+
+### Changed
+- **OmegaConf 2.4+ migration**: Switched from deprecated `register_new_resolver()` to the now-canonical `register_resolver()` API ([omegaconf#426](https://github.com/hydra-ecosystem/omegaconf/issues/426))
+- **Minimum Python version raised to 3.10** (required by OmegaConf 2.4; Python 3.8 and 3.9 are EOL)
+- **Minimum OmegaConf version raised to 2.4.0**
+- TOML support (`tomli`) moved from optional to conditional dependency (`python_version < "3.11"`)
+- Removed Python 3.8 and 3.9 from CI test matrix
+
 ## [1.3.2] - 2024-12-12
 
 ### Fixed

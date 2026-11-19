@@ -27,7 +27,7 @@ from .resolver import ProfileConfigResolver
 # Applications using this library should configure their own handlers
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__version__ = "1.3.2"
+__version__ = "1.4.0"
 __all__ = [
     "ProfileConfigResolver",
     "ConfigDiscovery",
